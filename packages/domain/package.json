@@ -1,0 +1,17 @@
+{
+  "name": "@alinamatrix/domain",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.0",
+    "typescript": "^5.5.4"
+  }
+}

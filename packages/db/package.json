@@ -1,0 +1,14 @@
+{
+  "name": "@alinamatrix/db",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"No db tests in Phase 1\" && exit 0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}
