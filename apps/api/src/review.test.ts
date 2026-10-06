@@ -353,15 +353,15 @@ describe("handleCreateComment — immutability", () => {
   });
 
   it("calls insertComment (not update)", async () => {
-    const insertSpy = vi.fn(async () => makeCommentRow());
+    const insertSpy = vi.fn<(arg: { body: string }) => Promise<CommentRow>>(async () => makeCommentRow());
     const db = makeReviewDb({ insertComment: insertSpy });
     const req = makeMockReq({ authorId: AUTHOR_ID, body: "review note" });
     const { res } = makeMockRes();
     await handleCreateComment(req, res, db, TENANT_A, TASK_ID);
     expect(insertSpy).toHaveBeenCalledOnce();
     // The call parameters must include body (not update)
-    const call = insertSpy.mock.calls[0]![0];
-    expect(call.body).toBe("review note");
+    const call = insertSpy.mock.calls[0]?.[0];
+    expect(call?.body).toBe("review note");
   });
 
   it("returns 404 when task is not found", async () => {

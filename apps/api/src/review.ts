@@ -110,7 +110,7 @@ export async function handleCreateReviewTask(
   }
   const parsed = CreateReviewTaskRequestSchema.safeParse(body);
   if (!parsed.success) {
-    jsonError(res, 400, "Invalid request: " + parsed.error.issues[0]?.message ?? "validation failed");
+    jsonError(res, 400, "Invalid request: " + (parsed.error.issues[0]?.message ?? "validation failed"));
     return;
   }
   const { workflowRunId, projectId, draftId, authorId } = parsed.data;
