@@ -1,4 +1,3 @@
-====================================================================================================
 ALINAMATRIX ENTERPRISE  -  DIRECTIVE
 SYSTEM VERSION 1.0.0 / PHASES 1-10 / LOCKED
 STATUS: ENTERPRISE CANDIDATE / ACTIVE DEVELOPMENT
