@@ -204,22 +204,27 @@ describe("runGenerate — determinism", () => {
     const claimA = makeUuid();
     const claimB = makeUuid();
     const allowedClaimIds = new Set([claimA, claimB]);
-    const r1 = runGenerate(baseInput({ allowedClaimIds, requestedClaimIds: [claimA, claimB] }));
-    const r2 = runGenerate(baseInput({ allowedClaimIds, requestedClaimIds: [claimB, claimA] }));
+    // Use the same fixed input object, only swapping the order of requestedClaimIds.
+    const shared = baseInput({ allowedClaimIds, requestedClaimIds: [claimA, claimB] });
+    const r1 = runGenerate(shared);
+    const r2 = runGenerate({ ...shared, requestedClaimIds: [claimB, claimA] });
     expect(r1.draftHash).toBe(r2.draftHash);
   });
 
   it("different planHash produces different draftHash", () => {
-    const r1 = runGenerate(baseInput({ planHash: sha256("plan-v1") }));
-    const r2 = runGenerate(baseInput({ planHash: sha256("plan-v2") }));
+    const shared = baseInput({ planHash: sha256("plan-v1") });
+    const r1 = runGenerate(shared);
+    const r2 = runGenerate({ ...shared, planHash: sha256("plan-v2") });
     expect(r1.draftHash).not.toBe(r2.draftHash);
   });
 
   it("different requestedClaimIds produce different draftHash", () => {
     const claimA = makeUuid();
     const claimB = makeUuid();
-    const r1 = runGenerate(baseInput({ allowedClaimIds: new Set([claimA, claimB]), requestedClaimIds: [claimA] }));
-    const r2 = runGenerate(baseInput({ allowedClaimIds: new Set([claimA, claimB]), requestedClaimIds: [claimB] }));
+    const allowed = new Set([claimA, claimB]);
+    const shared = baseInput({ allowedClaimIds: allowed, requestedClaimIds: [claimA] });
+    const r1 = runGenerate(shared);
+    const r2 = runGenerate({ ...shared, requestedClaimIds: [claimB] });
     expect(r1.draftHash).not.toBe(r2.draftHash);
   });
 

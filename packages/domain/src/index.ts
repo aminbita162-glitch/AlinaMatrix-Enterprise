@@ -80,3 +80,17 @@ export type {
   GenerateInput,
   GenerateResult,
 } from "./generate.js";
+
+export {
+  runGuard,
+  guardResultToTransition,
+} from "./guard.js";
+export type {
+  GuardInput,
+  GuardResult,
+  GuardFinding,
+  GuardClaimInput,
+  GuardCitationInput,
+  GuardFindingLevel,
+  GuardFindingRule,
+} from "./guard.js";

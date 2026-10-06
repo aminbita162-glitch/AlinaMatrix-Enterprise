@@ -131,6 +131,10 @@ importers:
         version: 2.1.9(@types/node@22.20.5)
 
   packages/domain:
+    dependencies:
+      '@alinamatrix/contracts':
+        specifier: workspace:^
+        version: link:../contracts
     devDependencies:
       typescript:
         specifier: ^5.5.4
