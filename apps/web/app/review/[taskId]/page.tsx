@@ -4,7 +4,9 @@ import { useEffect, useState, use } from "react";
 import {
   apiGet,
   apiPost,
+  getSessionUser,
   ApiError,
+  type SessionUser,
   type ReviewTaskDetailResponse,
   type SourceFragmentResponse,
   type ClaimResponse,
@@ -25,12 +27,14 @@ export default function ReviewTaskDetailPage({ params }: Props) {
   const [commentBody, setCommentBody] = useState("");
   const [commentError, setCommentError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [taskDetail, fragmentList, claimList] = await Promise.all([
+        const [session, taskDetail, fragmentList, claimList] = await Promise.all([
+          getSessionUser(),
           apiGet<ReviewTaskDetailResponse>(`/review-tasks/${taskId}`),
           apiGet<SourceFragmentResponse[]>(`/review-tasks/${taskId}/fragments`).catch(
             () => [] as SourceFragmentResponse[],
@@ -40,6 +44,7 @@ export default function ReviewTaskDetailPage({ params }: Props) {
           ),
         ]);
         if (cancelled) return;
+        setSessionUser(session);
         setDetail(taskDetail);
         setFragments(fragmentList);
         setClaims(claimList);
@@ -57,6 +62,10 @@ export default function ReviewTaskDetailPage({ params }: Props) {
   }, [taskId]);
 
   async function submitComment() {
+    if (!sessionUser) {
+      setCommentError("Not authenticated.");
+      return;
+    }
     if (!commentBody.trim()) {
       setCommentError("Comment body must not be empty.");
       return;
@@ -64,7 +73,7 @@ export default function ReviewTaskDetailPage({ params }: Props) {
     setCommentError(null);
     try {
       await apiPost(`/review-tasks/${taskId}/comments`, {
-        authorId: "00000000-0000-4000-8000-000000000001",
+        authorId: sessionUser.userId,
         body: commentBody.trim(),
       });
       setCommentBody("");
@@ -76,10 +85,14 @@ export default function ReviewTaskDetailPage({ params }: Props) {
   }
 
   async function submitApproval() {
+    if (!sessionUser) {
+      setActionError("Not authenticated.");
+      return;
+    }
     setActionError(null);
     try {
       await apiPost(`/review-tasks/${taskId}/approvals`, {
-        approverId: "00000000-0000-4000-8000-000000000001",
+        approverId: sessionUser.userId,
         decision: "approved",
       });
       const refreshed = await apiGet<ReviewTaskDetailResponse>(`/review-tasks/${taskId}`);
@@ -90,11 +103,15 @@ export default function ReviewTaskDetailPage({ params }: Props) {
   }
 
   async function decideClaim(claimId: string, decision: "approved" | "rejected") {
+    if (!sessionUser) {
+      setActionError("Not authenticated.");
+      return;
+    }
     setActionError(null);
     try {
       const result = await apiPost<ClaimDecisionResponse>(`/claims/${claimId}/decision`, {
         decision,
-        reviewerId: "00000000-0000-4000-8000-000000000001",
+        reviewerId: sessionUser.userId,
       });
       setClaims((prev) =>
         prev.map((c) =>

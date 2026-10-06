@@ -64,6 +64,31 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
 }
 
 // ---------------------------------------------------------------------------
+// Session — the authenticated user id is server-derived from the HttpOnly
+// session cookie. The web client cannot read the cookie, so it fetches the
+// current session via GET /auth/me and uses that userId for reviewer/
+// approver/author fields — never a hardcoded id.
+// ---------------------------------------------------------------------------
+
+export interface SessionUser {
+  userId: string;
+  tenantId: string;
+}
+
+/**
+ * Fetch the current session user from the API.
+ * Returns null when there is no authenticated session (401).
+ */
+export async function getSessionUser(): Promise<SessionUser | null> {
+  try {
+    return await apiGet<SessionUser>("/auth/me");
+  } catch (err: unknown) {
+    if (err instanceof ApiError && err.status === 401) return null;
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Response shapes (mirror packages/contracts/src/review.ts)
 // ---------------------------------------------------------------------------
 

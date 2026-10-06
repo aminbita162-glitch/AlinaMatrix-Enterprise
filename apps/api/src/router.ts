@@ -328,6 +328,33 @@ export function router(deps: RouterDeps | AuthDb = {}) {
       return;
     }
 
+    // GET /auth/me — return the authenticated session user id and tenant id.
+    // The session cookie is HttpOnly, so the web client cannot read it
+    // directly; this route is the server-side source of truth for the
+    // current user id (used by the review UI instead of a hardcoded id).
+    if (method === "GET" && url === "/auth/me") {
+      if (!authDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      void (async () => {
+        const session = await resolveSession(authDb, req.headers["cookie"]);
+        if (!session) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized" }));
+          return;
+        }
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ userId: session.userId, tenantId: session.tenantId }));
+      })().catch((err: unknown) => {
+        logger.error("auth/me handler error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
     if (method === "POST" && url === "/sources/upload") {
       if (!authDb || !ingestDb || !storage) {
         res.writeHead(503, { "Content-Type": "application/json" });

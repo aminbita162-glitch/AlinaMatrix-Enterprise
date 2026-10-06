@@ -1,20 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiGet, apiPost, ApiError, type ClaimResponse, type ClaimDecisionResponse } from "../lib/api";
+import { apiGet, apiPost, getSessionUser, ApiError, type SessionUser, type ClaimResponse, type ClaimDecisionResponse } from "../lib/api";
 
 export default function ClaimsPage() {
   const [claims, setClaims] = useState<ClaimResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const data = await apiGet<ClaimResponse[]>("/claims");
-        if (!cancelled) setClaims(data);
+        const [session, data] = await Promise.all([
+          getSessionUser(),
+          apiGet<ClaimResponse[]>("/claims"),
+        ]);
+        if (!cancelled) {
+          setSessionUser(session);
+          setClaims(data);
+        }
       } catch (err: unknown) {
         if (!cancelled) {
           setError(err instanceof ApiError ? err.message : "Failed to load claims.");
@@ -29,12 +36,16 @@ export default function ClaimsPage() {
   }, []);
 
   async function decide(claimId: string, decision: "approved" | "rejected") {
+    if (!sessionUser) {
+      setError("Not authenticated.");
+      return;
+    }
     setPendingAction(claimId);
     setError(null);
     try {
       const result = await apiPost<ClaimDecisionResponse>(`/claims/${claimId}/decision`, {
         decision,
-        reviewerId: "00000000-0000-4000-8000-000000000001",
+        reviewerId: sessionUser.userId,
       });
       setClaims((prev) =>
         prev.map((c) =>
