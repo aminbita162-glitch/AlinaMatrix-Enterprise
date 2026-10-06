@@ -1,3 +1,8 @@
-// Phase 1 stub — HTML renderer from approved content model added in Phase 8
-// Status: Enterprise Candidate — Active Development
-export {};
+/**
+ * packages/renderer — public API
+ *
+ * Phase 8: HTML renderer (PDF, manifest, watermark added in subsequent commits).
+ *
+ * Status: Enterprise Candidate — Active Development
+ */
+export { renderHtml, renderWatermark } from "./html.js";
