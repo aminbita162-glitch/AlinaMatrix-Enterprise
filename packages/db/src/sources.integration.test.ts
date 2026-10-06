@@ -337,3 +337,89 @@ describeIf("RLS live — source_versions: Tenant A vs Tenant B isolation", () =>
     );
   });
 });
+
+// ================================================================
+// source_fragments — RLS live tests
+// ================================================================
+describeIf("RLS live — source_fragments: Tenant A vs Tenant B isolation", () => {
+  it("Tenant A context sees its own fragment", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_A,
+      "SELECT id FROM source_fragments WHERE id = $1",
+      [FRAGMENT_A],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe(FRAGMENT_A);
+  });
+
+  it("Tenant B context sees its own fragment", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_B,
+      "SELECT id FROM source_fragments WHERE id = $1",
+      [FRAGMENT_B],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe(FRAGMENT_B);
+  });
+
+  it("Tenant A context cannot read Tenant B fragment", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_A,
+      "SELECT id FROM source_fragments WHERE id = $1",
+      [FRAGMENT_B],
+    );
+    expect(rows).toHaveLength(0);
+  });
+
+  it("Tenant B context cannot read Tenant A fragment", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_B,
+      "SELECT id FROM source_fragments WHERE id = $1",
+      [FRAGMENT_A],
+    );
+    expect(rows).toHaveLength(0);
+  });
+
+  it("missing tenant context returns no rows from source_fragments — fail closed", async () => {
+    const rows = await queryNoContext<{ id: string }>("SELECT id FROM source_fragments");
+    expect(rows).toHaveLength(0);
+  });
+
+  it("Tenant A cannot INSERT a fragment into Tenant B (WITH CHECK rejects)", async () => {
+    await expect(
+      queryAs(
+        TENANT_A,
+        `INSERT INTO source_fragments
+           (version_id, tenant_id, ordinal, text, char_start, char_end, hash)
+         VALUES ($1, $2, 99, 'cross', 0, 5, $3)`,
+        [VERSION_B, TENANT_B, "cc".repeat(32)],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("source_fragments DELETE is silently blocked (no DELETE policy — immutable)", async () => {
+    const before = await withTransaction(suPool, async (c: pg.PoolClient) => {
+      const r = await c.query<{ count: string }>(
+        "SELECT count(*)::text AS count FROM source_fragments WHERE id = $1",
+        [FRAGMENT_A],
+      );
+      return Number(r.rows[0]?.count ?? "0");
+    });
+    expect(before).toBe(1);
+
+    await queryAs(
+      TENANT_A,
+      "DELETE FROM source_fragments WHERE id = $1",
+      [FRAGMENT_A],
+    );
+
+    const after = await withTransaction(suPool, async (c: pg.PoolClient) => {
+      const r = await c.query<{ count: string }>(
+        "SELECT count(*)::text AS count FROM source_fragments WHERE id = $1",
+        [FRAGMENT_A],
+      );
+      return Number(r.rows[0]?.count ?? "0");
+    });
+    expect(after).toBe(1);
+  });
+});
