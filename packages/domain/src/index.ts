@@ -94,3 +94,20 @@ export type {
   GuardFindingLevel,
   GuardFindingRule,
 } from "./guard.js";
+
+export {
+  approveClaim,
+  rejectClaim,
+  canCompleteReview,
+  assertNoRejectedClaims,
+  assertFourEyes,
+  FourEyesError,
+  RejectedClaimError,
+} from "./review.js";
+export type {
+  ClaimReviewerStatus,
+  ClaimDecisionInput,
+  ClaimDecisionResult,
+  ReviewClaimInput,
+  ApproverRecord,
+} from "./review.js";
