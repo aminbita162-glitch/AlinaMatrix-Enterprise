@@ -227,6 +227,17 @@ CREATE POLICY claim_edges_insert ON claim_edges
   WITH CHECK (tenant_id = current_tenant_id());
 
 -- ============================================================
+-- GRANTS
+-- app_user is the connection role for all application queries.
+-- Table-level grants are required; RLS policies then filter rows.
+-- ============================================================
+GRANT SELECT, INSERT, UPDATE, DELETE ON claims              TO app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON citations           TO app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON assumptions         TO app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON terminology_entries TO app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON claim_edges         TO app_user;
+
+-- ============================================================
 -- MIGRATION REGISTRY
 -- ============================================================
 INSERT INTO schema_migrations (name) VALUES ('003_claims_provenance');
