@@ -202,3 +202,18 @@ export {
   UnknownTemplateKeyError,
   TemplateInputError,
 } from "./template.js";
+
+// Phase E — multi-party consensus review
+export {
+  buildConsensusConfig,
+  assertNoSelfApproval,
+  assertApproverAuthorized,
+  recordConsensusDecision,
+  evaluateConsensus,
+  assertConsensusApproved,
+  SelfApprovalError,
+  UnknownApproverError,
+  ConsensusNotApprovedError,
+  ConsensusRejectedError,
+  ConsensusInputError,
+} from "./consensus.js";

@@ -227,3 +227,15 @@ export type {
   TraceRow,
   InsertTraceParams,
 } from "./trace.js";
+
+// Phase E — consensus decision events (append-only)
+export {
+  insertConsensusDecisionEvent,
+  listConsensusDecisionEventsByTask,
+  countConsensusApprovals,
+  countConsensusRejections,
+} from "./consensus.js";
+export type {
+  ConsensusDecisionEventRow,
+  InsertConsensusDecisionEventParams,
+} from "./consensus.js";

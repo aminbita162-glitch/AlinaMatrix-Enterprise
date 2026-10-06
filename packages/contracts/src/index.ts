@@ -302,3 +302,20 @@ export type {
   M03Template,
   M03TemplateSection,
 } from "./template.js";
+
+// Phase E — multi-party consensus review
+export {
+  ConsensusDecisionSchema,
+  ConsensusConfigSchema,
+  ConsensusDecisionEventSchema,
+  ConsensusStateValueSchema,
+  ConsensusStateSchema,
+} from "./consensus.js";
+
+export type {
+  ConsensusDecision,
+  ConsensusConfig,
+  ConsensusDecisionEvent,
+  ConsensusStateValue,
+  ConsensusState,
+} from "./consensus.js";
