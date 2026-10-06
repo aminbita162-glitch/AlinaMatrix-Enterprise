@@ -114,6 +114,27 @@ describe("isWatermarkIntact", () => {
   it("returns false for empty HTML", () => {
     expect(isWatermarkIntact("", WATERMARK)).toBe(false);
   });
+
+  it("returns false when watermark values appear as bare text but meta tags are absent", () => {
+    // The values are present in the body text, but not as <meta> tags.
+    // A bare substring check would wrongly pass; the meta tag check must fail.
+    const htmlWithBareValues = `<!DOCTYPE html>
+<html><head><title>${UUID} ${BUILD_ID}</title></head>
+<body><p>Build ${WATERMARK.artifactVersion} at ${WATERMARK.buildTime}</p></body>
+</html>`;
+    expect(isWatermarkIntact(htmlWithBareValues, WATERMARK)).toBe(false);
+  });
+
+  it("returns false when meta tag names are present but values are wrong", () => {
+    const htmlWrongValues = `<!DOCTYPE html>
+<html><head>
+  <meta name="x-alinamatrix-tenant" content="wrong-tenant">
+  <meta name="x-alinamatrix-artifact-version" content="1">
+  <meta name="x-alinamatrix-build-id" content="wrong-build">
+  <meta name="x-alinamatrix-build-time" content="2026-10-06T12:00:00.000Z">
+</head><body></body></html>`;
+    expect(isWatermarkIntact(htmlWrongValues, WATERMARK)).toBe(false);
+  });
 });
 
 // ============================================================

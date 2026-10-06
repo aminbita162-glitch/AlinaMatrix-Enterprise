@@ -104,21 +104,46 @@ export function buildExportBundle(input: ExportBundleInput): ExportBundleResult 
 }
 
 /**
- * Check that the watermark is embedded in the HTML.
+ * Check that the watermark is embedded in the HTML as the four renderer meta
+ * tags (not merely as bare substrings).
  *
- * The watermark is embedded as `<meta>` tags in the HTML `<head>` by the
- * renderer (Phase 8). We verify all four watermark fields are present as
- * values in the HTML string.
+ * The renderer (Phase 8) emits the watermark as four <meta> tags in <head>:
+ *   x-alinamatrix-tenant, x-alinamatrix-artifact-version,
+ *   x-alinamatrix-build-id, x-alinamatrix-build-time.
+ *
+ * A bare substring check (does the HTML contain the tenant id?) is too weak:
+ * the value could appear in body text without the meta tag being present, so
+ * the watermark could be stripped from the head while its values survive
+ * elsewhere. This check requires each field's value to appear in its own
+ * named meta tag, proving the watermark block is intact.
+ *
+ * Directive Phase A: "Watermark intact requires the four renderer meta tags,
+ * not a bare substring."
  */
 export function isWatermarkIntact(
   html: string,
   watermark: ExportBundleInput["watermark"],
 ): boolean {
-  const checks = [
-    html.includes(watermark.tenantId),
-    html.includes(String(watermark.artifactVersion)),
-    html.includes(watermark.buildId),
-    html.includes(watermark.buildTime),
+  const tagPairs: Array<[string, string]> = [
+    [`x-alinamatrix-tenant`,            watermark.tenantId],
+    [`x-alinamatrix-artifact-version`,  String(watermark.artifactVersion)],
+    [`x-alinamatrix-build-id`,          watermark.buildId],
+    [`x-alinamatrix-build-time`,        watermark.buildTime],
   ];
-  return checks.every(Boolean);
+
+  for (const [name, value] of tagPairs) {
+    // Match the meta tag by name and require the expected value as its
+    // content attribute. Allow either single or double quotes around the
+    // content value (the renderer emits double quotes; be tolerant on read).
+    const re = new RegExp(
+      `<meta\\s+name=["']${escapeRegExp(name)}["']\\s+content=["']${escapeRegExp(value)}["']`,
+    );
+    if (!re.test(html)) return false;
+  }
+  return true;
+}
+
+/** Escape a string for literal inclusion in a RegExp. */
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
