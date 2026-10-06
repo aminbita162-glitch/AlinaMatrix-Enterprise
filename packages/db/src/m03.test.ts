@@ -216,7 +216,7 @@ describe("migration 005 SQL", () => {
   it("file exists and contains m03_plans table", async () => {
     const fs = await import("node:fs/promises");
     const sql = await fs.readFile(
-      new URL("../../migrations/005_m03_architect.sql", import.meta.url),
+      new URL("../migrations/005_m03_architect.sql", import.meta.url),
       "utf8",
     );
     expect(sql).toContain("CREATE TABLE m03_plans");
@@ -225,7 +225,7 @@ describe("migration 005 SQL", () => {
   it("contains m03_drafts table", async () => {
     const fs = await import("node:fs/promises");
     const sql = await fs.readFile(
-      new URL("../../migrations/005_m03_architect.sql", import.meta.url),
+      new URL("../migrations/005_m03_architect.sql", import.meta.url),
       "utf8",
     );
     expect(sql).toContain("CREATE TABLE m03_drafts");
@@ -234,7 +234,7 @@ describe("migration 005 SQL", () => {
   it("enables RLS on both tables", async () => {
     const fs = await import("node:fs/promises");
     const sql = await fs.readFile(
-      new URL("../../migrations/005_m03_architect.sql", import.meta.url),
+      new URL("../migrations/005_m03_architect.sql", import.meta.url),
       "utf8",
     );
     expect(sql).toContain("ALTER TABLE m03_plans  ENABLE ROW LEVEL SECURITY");
@@ -244,7 +244,7 @@ describe("migration 005 SQL", () => {
   it("grants only SELECT, INSERT (immutable tables)", async () => {
     const fs = await import("node:fs/promises");
     const sql = await fs.readFile(
-      new URL("../../migrations/005_m03_architect.sql", import.meta.url),
+      new URL("../migrations/005_m03_architect.sql", import.meta.url),
       "utf8",
     );
     // Must not grant UPDATE or DELETE on either table.
@@ -258,7 +258,7 @@ describe("migration 005 SQL", () => {
   it("registers migration in schema_migrations", async () => {
     const fs = await import("node:fs/promises");
     const sql = await fs.readFile(
-      new URL("../../migrations/005_m03_architect.sql", import.meta.url),
+      new URL("../migrations/005_m03_architect.sql", import.meta.url),
       "utf8",
     );
     expect(sql).toContain("INSERT INTO schema_migrations (name) VALUES ('005_m03_architect')");
