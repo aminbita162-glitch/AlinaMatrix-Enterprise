@@ -181,3 +181,15 @@ export type {
   ExportAuditRow,
   InsertExportAuditParams,
 } from "./export-audit.js";
+
+// Phase 9 — project budgets (budget breaker)
+export {
+  insertProjectBudget,
+  getProjectBudget,
+  increaseProjectBudgetSpent,
+} from "./budget.js";
+export type {
+  ProjectBudgetRow,
+  InsertProjectBudgetParams,
+  IncreaseProjectBudgetSpentParams,
+} from "./budget.js";

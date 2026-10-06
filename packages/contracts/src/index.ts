@@ -249,3 +249,16 @@ export type {
   ExportPermission,
   ExportBundleResult,
 } from "./export.js";
+
+// Phase 9 — budget contracts
+export {
+  BudgetCheckSchema,
+  BudgetResultSchema,
+  BudgetBreachResultSchema,
+} from "./budget.js";
+
+export type {
+  BudgetCheck,
+  BudgetResult,
+  BudgetBreachResult,
+} from "./budget.js";

@@ -138,3 +138,9 @@ export type {
   ExportBundleInput,
   ExportBundleResult,
 } from "./export.js";
+
+// Phase 9 — budget breaker
+export {
+  checkBudget,
+  BudgetBreaker,
+} from "./budget.js";
