@@ -1,0 +1,60 @@
+# Render Blueprint — AlinaMatrix Enterprise
+# Render candidate — not production.
+#
+# Status: Enterprise Candidate — Active Development. No production claim is
+# made. Beachhead M03 is not yet proven. This blueprint describes a Render
+# deployment surface for the web app, the Node HTTP API, and the PostgreSQL 16
+# database. Secrets come from the host environment (Render dashboard env vars
+# or environment groups); no secret value is committed in this file.
+# Integration tests remain skipped without a live database and are not run by
+# this blueprint.
+#
+# The /docs (Swagger UI) and /openapi.json paths are served by the api service
+# at runtime; they are not browseable on GitHub.
+
+databases:
+  - name: alinamatrix-db
+    databaseName: alinamatrix
+    plan: starter
+    # Render-managed PostgreSQL 16 is the isolation + audit store.
+    # Apply migrations 001–014 via a preDeploy hook or a manual run of
+    # packages/db/migrations/*.sql against the provisioned DATABASE_URL.
+
+services:
+  - name: alinamatrix-api
+    type: web
+    region: oregon
+    plan: starter
+    rootDir: apps/api
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @alinamatrix/api build
+    startCommand: node dist/server.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Render assigns PORT automatically — apps/api/src/server.ts reads
+      # process.env.PORT (defaults to 3001 locally).
+      - key: DATABASE_URL
+        fromDatabase:
+          name: alinamatrix-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+
+  - name: alinamatrix-web
+    type: web
+    region: oregon
+    plan: starter
+    rootDir: apps/web
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @alinamatrix/web build
+    startCommand: pnpm --filter @alinamatrix/web start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      # The web app calls the api service via its Render internal URL.
+      # NEXT_PUBLIC_* vars are inlined at build time.
+      - key: NEXT_PUBLIC_API_BASE_URL
+        value: https://alinamatrix-api.onrender.com
+      - key: NODE_ENV
+        value: production
+
+# AlinaMatrix Enterprise — Enterprise Candidate — Active Development.
