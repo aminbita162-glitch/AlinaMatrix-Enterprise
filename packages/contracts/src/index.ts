@@ -77,6 +77,62 @@ export type {
 } from "./claims.js";
 
 export {
+  // M03 content model — Phase 6
+  M03MetadataSchema,
+  M03ContextSchema,
+  M03DecisionSchema,
+  M03StatusValueSchema,
+  M03StatusSchema,
+  M03DriverSchema,
+  M03OptionSchema,
+  M03OutcomeSchema,
+  M03ConsequenceSchema,
+  M03EvidenceEntrySchema,
+  M03ClaimRefSchema,
+  M03AssumptionSchema,
+  M03NegativeEvidenceSchema,
+  M03TerminologyEntrySchema,
+  M03RiskSchema,
+  M03OpenQuestionSchema,
+  M03ReviewSchema,
+  M03ApprovalSchema,
+  M03LimitationSchema,
+  M03ReleaseMetadataSchema,
+  M03ContentModelSchema,
+  M03ArchitectPlanSchema,
+  M03PlanRowSchema,
+  M03DraftRowSchema,
+} from "./m03.js";
+
+export type {
+  M03Metadata,
+  M03Context,
+  M03Decision,
+  M03StatusValue,
+  M03Status,
+  M03Driver,
+  M03Option,
+  M03Outcome,
+  M03Consequence,
+  M03EvidenceEntry,
+  M03ClaimRef,
+  M03Assumption,
+  M03NegativeEvidence,
+  M03TerminologyEntry,
+  M03Risk,
+  M03OpenQuestion,
+  M03Review,
+  M03Approval,
+  M03Limitation,
+  M03ReleaseMetadata,
+  M03ContentModel,
+  M03ArchitectPlan,
+  M03PlanRow,
+  M03DraftRow,
+} from "./m03.js";
+
+
+export {
   AgentCapabilitySchema,
   AgentResponseSchema,
   ModelVersionResponseSchema,
