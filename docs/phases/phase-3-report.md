@@ -34,7 +34,8 @@
 | `src/rls.test.ts` | 8 | 8 | 0 | unit (mock client) |
 | `src/audit.test.ts` | 5 | 5 | 0 | unit (SQL file read) |
 | `src/sources.test.ts` | 19 | 19 | 0 | unit (mock client + SQL read) |
-| `src/rls.integration.test.ts` | 0 run | — | — | skipped (no live DB) |
+| `src/rls.integration.test.ts` | 14 | 14 | 0 | live (PostgreSQL 16, app_user) |
+| `src/sources.integration.test.ts` | 28 | 28 | 0 | live (PostgreSQL 16, app_user) |
 
 `sources.test.ts` descriptions:
 - insertSource: issues an INSERT into sources with correct fields
@@ -88,11 +89,13 @@
 
 | Metric | Value |
 |---|---|
-| Test files | 8 (3 skipped/echo) |
-| Tests run | 87 |
-| **Passed** | **87** |
+| Test files | 9 |
+| Tests run | 115 |
+| **Passed** | **115** |
 | **Failed** | **0** |
-| Skipped (live integration, no DB) | 14 |
+| Skipped | 0 |
+| *Live integration (Phase 2 tables)* | *14 tests against PostgreSQL 16* |
+| *Live integration (Phase 3 tables)* | *28 tests against PostgreSQL 16* |
 
 ---
 
@@ -126,6 +129,7 @@
 | Ingest pipeline | `apps/api/src/ingest.ts` | Size+MIME validation, sha256, idempotency, ObjectStorage store, extraction, fragment insert, audit; IngestDb interface for test injection |
 | Router update | `apps/api/src/router.ts` | POST /sources/upload (auth-gated, multipart); RouterDeps interface; back-compat with Phase 2 AuthDb-only callers |
 | DB sources tests | `packages/db/src/sources.test.ts` | 19 tests; mock client; immutability via SQL read; idempotency; tenant isolation |
+| DB sources live RLS tests | `packages/db/src/sources.integration.test.ts` | 28 live tests; sources (6), source_versions (8), source_fragments (7), evidence_items (7) against PostgreSQL 16 with app_user |
 | Ingest tests | `apps/api/src/ingest.test.ts` | 15 tests; MIME mismatch; size cap; idempotency; audit events; extraction failure → FAILED_TERMINAL |
 | Phase plan | `docs/phases/phase-3-plan.md` | |
 | Phase report | `docs/phases/phase-3-report.md` | This file |
@@ -146,7 +150,7 @@ Two corrections made during development (before gate):
 
 | Item | Notes |
 |---|---|
-| No live DB integration tests for Phase 3 tables | sources, source_versions, source_fragments, evidence_items RLS is verified by reading the migration SQL and by mock-client tests. End-to-end RLS isolation (Tenant A cannot read Tenant B's source versions) requires a live PostgreSQL instance. This is an open pre-launch blocker inherited from Phase 2. |
+| Phase 3 live RLS tests require manual DB setup | Migration 002 and GRANT statements must be applied before running `sources.integration.test.ts`. The grants (`GRANT SELECT, INSERT, UPDATE, DELETE ON sources/source_versions/source_fragments/evidence_items TO app_user`) are not tracked in the migration file (migration 002 was already committed without them). A follow-up migration or a `grants.sql` runbook script should capture these for fresh installs. |
 | PDF image-only files return FAILED_TERMINAL | pdf-parse extracts embedded text only. Image-based (scanned) PDFs produce no text and are correctly set to FAILED_TERMINAL. OCR is explicitly deferred per directive. |
 | DOCX complex layout may lose fidelity | Extraction walks `<w:t>` elements only; rich formatting (tables, text boxes) may be omitted. Text-only content is correctly extracted. Acceptable for the evidence-extraction pipeline. |
 | Multipart parser is buffered | The entire request body is loaded into memory before parsing. Combined with the 50 MB size cap (enforced at the domain layer before storing), this is acceptable for dev/test. A streaming parser would be required before high-throughput production load. |
