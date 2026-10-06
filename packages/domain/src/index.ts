@@ -42,3 +42,21 @@ export type {
   ClaimAdjacency,
   UnitMismatchFlag,
 } from "./claims.js";
+
+export {
+  AGENT_CAPABILITIES,
+  fakeProvider,
+  DeterministicFakeProvider,
+  assertAgentCapability,
+  assertJobNotCancelled,
+  buildCacheKey,
+  CapabilityDeniedError,
+  CancelledJobError,
+} from "./agents.js";
+export type {
+  AgentCapability,
+  AgentName,
+  CacheKeyParams,
+  FakeProviderInput,
+  FakeProviderOutput,
+} from "./agents.js";
