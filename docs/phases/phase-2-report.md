@@ -3,6 +3,7 @@
 **Status:** Enterprise Candidate — Active Development
 **Phase:** 2 of 10
 **Gate result:** PASSED
+**Live RLS integration:** PASSED (14/14 against PostgreSQL 16 with app_user role)
 **Commit:** yes
 
 ---
@@ -21,10 +22,11 @@
 
 ### packages/db
 
-| File | Tests | Passed | Failed |
-|---|---|---|---|
-| `src/rls.test.ts` | 8 | 8 | 0 |
-| `src/audit.test.ts` | 5 | 5 | 0 |
+| File | Tests | Passed | Failed | Mode |
+|---|---|---|---|---|
+| `src/rls.test.ts` | 8 | 8 | 0 | unit (mock client) |
+| `src/audit.test.ts` | 5 | 5 | 0 | unit (SQL file read) |
+| `src/rls.integration.test.ts` | 14 | 14 | 0 | live (PostgreSQL 16, app_user) |
 
 `rls.test.ts` descriptions:
 - setTenantContext calls SET LOCAL with a valid UUID
@@ -106,14 +108,15 @@
 |---|---|---|---|
 | `src/workflow.test.ts` | 12 | 12 | 0 |
 
-### Total
+### Total (unit + live integration)
 
 | Metric | Value |
 |---|---|
-| Test files | 7 |
-| Tests run | 65 |
-| **Passed** | **65** |
+| Test files | 8 |
+| Tests run | 79 |
+| **Passed** | **79** |
 | **Failed** | **0** |
+| *Live integration* | *14 tests against PostgreSQL 16* |
 
 ---
 

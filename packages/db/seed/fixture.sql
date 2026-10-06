@@ -50,8 +50,8 @@ INSERT INTO users (id, email, password_hash, is_fixture)
 VALUES (
   'aaaaaaaa-0000-4000-a000-000000000101',
   'user_alpha@fixture.test',
-  -- argon2id hash of "fixture-password-alpha"
-  '$argon2id$v=19$m=65536,t=3,p=4$YWxwaGFzYWx0YWxwaGE$jFv3SrVjwh+4VABpjnbFxFr0WdlUW/2xqnm3c3FXFR8',
+  -- argon2id hash of "fixture-password-alpha" (generated at seed time)
+  '$argon2id$v=19$m=19456,t=2,p=1$9MGzjGjYomK6NQY5L5Gjdw$LopQf8lfXcEQ5S46U+xNpFL0ei0fg7Ra3R9O00YQF6s',
   true
 ) ON CONFLICT (id) DO NOTHING;
 
@@ -60,8 +60,8 @@ INSERT INTO users (id, email, password_hash, is_fixture)
 VALUES (
   'bbbbbbbb-0000-4000-b000-000000000102',
   'user_beta@fixture.test',
-  -- argon2id hash of "fixture-password-beta"
-  '$argon2id$v=19$m=65536,t=3,p=4$YmV0YXNhbHRiZXRhMQ$k9bMlhqAFZfZWkCfXGE6RuWGkXGvJjb2n2FXqKE8RnM',
+  -- argon2id hash of "fixture-password-beta" (generated at seed time)
+  '$argon2id$v=19$m=19456,t=2,p=1$V6q1/CCY0TFvoybKOl6oAg$CiNpcGOHusyYD8qDAC8wKkQPqqf+mF646IbgHWvXevw',
   true
 ) ON CONFLICT (id) DO NOTHING;
 
