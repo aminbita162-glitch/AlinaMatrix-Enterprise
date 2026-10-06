@@ -178,3 +178,15 @@ export type {
   DiffField,
   DiffKind,
 } from "./timetravel.js";
+
+// Phase D — code-to-document trace
+export {
+  buildTraceRecord,
+  findTrace,
+  assertTraceExists,
+  MissingTraceError,
+  TraceInputError,
+} from "./trace.js";
+export type {
+  BuildTraceRecordInput,
+} from "./trace.js";

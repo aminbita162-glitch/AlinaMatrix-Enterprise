@@ -282,3 +282,12 @@ export type {
   ProvenanceLeaf,
   ProvenanceLedgerEntry,
 } from "./provenance.js";
+
+// Phase D — code-to-document trace
+export {
+  TraceRecordSchema,
+} from "./trace.js";
+
+export type {
+  TraceRecord,
+} from "./trace.js";

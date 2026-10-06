@@ -215,3 +215,15 @@ export type {
   ProvenanceLedgerRow,
   InsertProvenanceLedgerParams,
 } from "./provenance.js";
+
+// Phase D — code-to-document trace (append-only)
+export {
+  insertTrace,
+  listTracesByClaim,
+  listTracesByArtifact,
+  findTraceByPathAndClaim,
+} from "./trace.js";
+export type {
+  TraceRow,
+  InsertTraceParams,
+} from "./trace.js";
