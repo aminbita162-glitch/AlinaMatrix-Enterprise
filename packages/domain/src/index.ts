@@ -166,3 +166,15 @@ export {
 export type {
   BuildProvenanceLedgerEntryInput,
 } from "./provenance.js";
+
+// Phase D — artifact time-travel diff
+export {
+  diffArtifacts,
+} from "./timetravel.js";
+export type {
+  BuildSnapshot,
+  DiffResult,
+  DiffEntry,
+  DiffField,
+  DiffKind,
+} from "./timetravel.js";
