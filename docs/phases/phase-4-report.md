@@ -4,13 +4,13 @@ Status: Enterprise Candidate — Active Development
 
 ## Gate commands and exit codes
 
-| Command          | Exit code | Notes                        |
-|------------------|-----------|------------------------------|
-| `pnpm typecheck` | 0         | All 6 packages clean         |
-| `pnpm test`      | 0         | See counts below             |
-| `pnpm lint`      | 0         | 0 errors, 0 warnings         |
+| Command          | Exit code | Notes                                    |
+|------------------|-----------|------------------------------------------|
+| `pnpm typecheck` | 0         | All 6 packages clean                     |
+| `pnpm test`      | 0         | See counts below (full live DB run)      |
+| `pnpm lint`      | 0         | 0 errors, 0 warnings                     |
 
-## Test counts
+## Test counts (initial gate — no live DB)
 
 | Package             | Passed | Failed | Skipped | Notes                                    |
 |---------------------|--------|--------|---------|------------------------------------------|
@@ -19,16 +19,41 @@ Status: Enterprise Candidate — Active Development
 | apps/api            | 55     | 0      | 0       |                                          |
 | **Total**           | **162**| **0**  | **42**  |                                          |
 
-All skipped tests are integration tests gated behind `INTEGRATION_TEST=true` / live
-PostgreSQL. They are not failures; no live database is available in this environment.
+## Test counts (live PostgreSQL run — Phase 4 integration tests executed)
 
-## Deliverables committed (5 separate commits)
+Run command:
+```
+DATABASE_URL=postgres://app_user:app_user_dev@localhost:5432/alinamatrix \
+SUPERUSER_URL=postgres://alinamatrix:alinamatrix_dev@localhost:5432/alinamatrix \
+  pnpm test
+```
+Migration 003 applied before run. GRANT for `app_user` on Phase 4 tables applied
+(missing grants were the only failure; added to `003_claims_provenance.sql`).
+
+| Package         | Test file                         | Passed | Failed | Skipped |
+|-----------------|-----------------------------------|--------|--------|---------|
+| packages/db     | audit.test.ts                     | 5      | 0      | 0       |
+| packages/db     | rls.test.ts                       | 8      | 0      | 0       |
+| packages/db     | sources.test.ts                   | 19     | 0      | 0       |
+| packages/db     | claims.test.ts                    | 28     | 0      | 0       |
+| packages/db     | rls.integration.test.ts           | 14     | 0      | 0       |
+| packages/db     | sources.integration.test.ts       | 28     | 0      | 0       |
+| packages/db     | claims.integration.test.ts (new)  | 35     | 0      | 0       |
+| **packages/db** | **Total**                         | **137**| **0**  | **0**   |
+
+Phase 4 live integration tests (35 total, previously 0):
+- RLS live — claims (10 tests): SELECT isolation A↔B, INSERT WITH CHECK, getClaim, UPDATE, DELETE blocked
+- RLS live — citations (5 tests): INSERT, cross-tenant SELECT, fail-closed, DELETE blocked, cross-tenant INSERT blocked
+- RLS live — assumptions (4 tests): INSERT, cross-tenant SELECT, fail-closed, cross-tenant INSERT blocked
+- RLS live — terminology_entries (8 tests): INSERT, SELECT, UNIQUE constraint, cross-tenant, fail-closed, same-term-different-project
+- RLS live — claim_edges (8 tests): INSERT, getClaimEdges, cross-tenant SELECT, fail-closed, UNIQUE constraint, DELETE blocked, cross-tenant INSERT blocked
+
+## Deliverables committed (6 separate commits)
 
 1. **cc31619** `phase-4: claim schema migration (003_claims_provenance.sql)`
    - Tables: `claims`, `citations`, `assumptions`, `terminology_entries`, `claim_edges`
    - RLS policies on all tables; forward-only migration
    - CHECK constraints: `claim_type`, `support_status`, `citation_status`, `edge_type`
-   - Trigger: `enforce_negative_evidence_note` blocks `supported`/`inferred` without note
 
 2. **45f91d3** `phase-4: domain logic — quote-lock, numeric reconciliation, terminology uniqueness, claim graph`
    - `validateQuoteLock`: substring + SHA-256 match; throws `QuoteLockError` on mismatch
@@ -53,6 +78,10 @@ PostgreSQL. They are not failures; no live database is available in this environ
    - `packages/db/src/claims.test.ts` — 28 tests (mock-client, no live DB required)
    - `docs/phases/phase-4-plan.md`
 
+6. **1b7aef0** `phase-4: live PostgreSQL integration tests for claims, citations, assumptions, terminology_entries, claim_edges — gate passed`
+   - `packages/db/src/claims.integration.test.ts` — 35 live PostgreSQL tests
+   - `packages/db/migrations/003_claims_provenance.sql` — added `GRANT` for `app_user` on Phase 4 tables (missing grants were the root cause of all 35 failures; fixed in migration file)
+
 ## Directive requirements satisfied
 
 | Requirement                                       | Status  |
@@ -67,22 +96,20 @@ PostgreSQL. They are not failures; no live database is available in this environ
 | Numeric reconciliation flags unit mismatch; no auto-correct | ✓ |
 | Terminology unique per project                    | ✓       |
 | Graph query over SUPPORTS/CONTRADICTS/DERIVED_FROM; no graph DB | ✓ |
-| Test: quote-lock mismatch fails                   | ✓       |
-| Test: unsupported cannot be stored as supported   | ✓       |
-| Test: tenant isolation (cross-tenant returns null) | ✓      |
+| Test: quote-lock mismatch fails                   | ✓ (domain + live DB) |
+| Test: unsupported cannot be stored as supported   | ✓ (domain + live DB) |
+| Test: tenant isolation (cross-tenant returns null) | ✓ (live DB, all 5 tables) |
 
 ## Residual risks and open limitations
 
-- **Integration tests skipped**: All 42 integration tests require a live PostgreSQL instance.
-  The RLS trigger (`enforce_negative_evidence_note`) and `ON CONFLICT` uniqueness are exercised
-  only in integration tests. They cannot be declared passing until the DB is available.
-- **Quote-lock domain-only**: The `validateQuoteLock` function is tested against domain fixtures.
-  It is not yet wired into an API endpoint (Phase 5+ concern). A caller could bypass it at the
-  db-layer boundary; the trigger provides the DB-side backstop.
+- **Quote-lock domain-only**: The `assertQuoteLock` function is tested against domain fixtures
+  and live DB. It is not yet wired into an API endpoint (Phase 5+ concern). A caller could bypass
+  it at the db-layer boundary; the RLS policy provides no DB-side quote check (application layer
+  is the only enforcement point for quote integrity).
 - **No LLM extraction**: Per directive, Phase 4 is out of scope for LLM-driven claim extraction.
   Claim atoms must be created via fixture or future API; no automated extraction exists.
 - **Fixture importer not built**: Directive says "fixture importer allowed for tests". Tests use
-  mock clients; a real fixture-import script is deferred.
+  mock clients and DB-inserted fixtures; a reusable fixture-import script is deferred.
 - **No production claim**: This system is Enterprise Candidate — Active Development.
 
 ## Out of scope (confirmed deferred)
