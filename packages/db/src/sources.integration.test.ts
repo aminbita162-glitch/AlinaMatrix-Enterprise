@@ -423,3 +423,88 @@ describeIf("RLS live — source_fragments: Tenant A vs Tenant B isolation", () =
     expect(after).toBe(1);
   });
 });
+
+// ================================================================
+// evidence_items — RLS live tests
+// ================================================================
+describeIf("RLS live — evidence_items: Tenant A vs Tenant B isolation", () => {
+  it("Tenant A context sees its own evidence item", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_A,
+      "SELECT id FROM evidence_items WHERE id = $1",
+      [EVIDENCE_A],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe(EVIDENCE_A);
+  });
+
+  it("Tenant B context sees its own evidence item", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_B,
+      "SELECT id FROM evidence_items WHERE id = $1",
+      [EVIDENCE_B],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe(EVIDENCE_B);
+  });
+
+  it("Tenant A context cannot read Tenant B evidence item", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_A,
+      "SELECT id FROM evidence_items WHERE id = $1",
+      [EVIDENCE_B],
+    );
+    expect(rows).toHaveLength(0);
+  });
+
+  it("Tenant B context cannot read Tenant A evidence item", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_B,
+      "SELECT id FROM evidence_items WHERE id = $1",
+      [EVIDENCE_A],
+    );
+    expect(rows).toHaveLength(0);
+  });
+
+  it("missing tenant context returns no rows from evidence_items — fail closed", async () => {
+    const rows = await queryNoContext<{ id: string }>("SELECT id FROM evidence_items");
+    expect(rows).toHaveLength(0);
+  });
+
+  it("Tenant A cannot INSERT an evidence item into Tenant B (WITH CHECK rejects)", async () => {
+    await expect(
+      queryAs(
+        TENANT_A,
+        `INSERT INTO evidence_items (version_id, fragment_id, tenant_id, kind, text)
+         VALUES ($1, $2, $3, 'statement', 'cross-tenant attempt')`,
+        [VERSION_B, FRAGMENT_B, TENANT_B],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("evidence_items DELETE is silently blocked (no DELETE policy — immutable)", async () => {
+    const before = await withTransaction(suPool, async (c: pg.PoolClient) => {
+      const r = await c.query<{ count: string }>(
+        "SELECT count(*)::text AS count FROM evidence_items WHERE id = $1",
+        [EVIDENCE_A],
+      );
+      return Number(r.rows[0]?.count ?? "0");
+    });
+    expect(before).toBe(1);
+
+    await queryAs(
+      TENANT_A,
+      "DELETE FROM evidence_items WHERE id = $1",
+      [EVIDENCE_A],
+    );
+
+    const after = await withTransaction(suPool, async (c: pg.PoolClient) => {
+      const r = await c.query<{ count: string }>(
+        "SELECT count(*)::text AS count FROM evidence_items WHERE id = $1",
+        [EVIDENCE_A],
+      );
+      return Number(r.rows[0]?.count ?? "0");
+    });
+    expect(after).toBe(1);
+  });
+});
