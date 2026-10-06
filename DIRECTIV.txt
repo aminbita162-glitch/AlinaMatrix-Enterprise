@@ -1,281 +1,80 @@
-ALINAMATRIX ENTERPRISE  -  DIRECTIVE
-SYSTEM VERSION 1.0.0 / PHASES 1-10 / LOCKED
+================================================================
+ALINAMATRIX ENTERPRISE — FOLLOW-ON
 STATUS: ENTERPRISE CANDIDATE / ACTIVE DEVELOPMENT
-====================================================================================================
+================================================================
 
-This file is the only implementation order. It lives at the repository root as DIRECTIVE.txt.
-The human operator creates the folder and this file. The implementing agent builds everything else.
-Do not name or depend on a specific agent product. Any capable agent must follow this file.
+This file is the only implementation order. Execute only the phase named
+in the operator's latest short instruction. If no phase is named, stop.
+At the end of a phase, stop. Do not start the next phase. Do not add a
+phase after F. Do not push. Commit each finished unit separately:
+"follow-on-<letter>: <unit> - gate passed". Do not use one phase-sized
+commit. Do not name an agent product.
 
-LANGUAGE LOCK
-----------------------------------------------------------------------------------------------------
-L01  Every file in this repository is English only.
-L02  No Persian, no other natural language, in source, comments, docs, UI, tests, commits, or logs.
-L03  Identifiers, error messages, README, and this directive stay English.
-L04  If a requested string is not English, do not insert it. Ask for an English replacement.
+English only: source, comments, docs, UI, tests, commits, logs.
+Allowed status line, exact: "Enterprise Candidate — Active Development".
+Never claim production, enterprise-shipped, compliant, zero-defect, or
+zero-hallucination. A skipped test is not passed. A failed test is failed.
+Do not invent citations, scores, customers, credentials, or URLs.
+Do not weaken a test. Do not call a live LLM. Use DeterministicFakeProvider.
+Do not accept client-supplied tenant_id as the isolation authority.
+Do not log secrets, raw documents, or full prompts.
+Do not delete Phase 1–10 evidence. Do not add a feature not named here.
+Material decisions not frozen here require an ADR and a stop.
+Host is Render: web, api, Postgres. Beachhead remains M03.
 
-HONESTY LOCK
-----------------------------------------------------------------------------------------------------
-H01  Never write that the system is production-ready, enterprise-shipped, compliant, zero-defect,
-     or zero-hallucination.
-H02  Allowed status line, exact: "Enterprise Candidate  -  Active Development".
-H03  A test not executed is not passed. A failed test is recorded as failed.
-H04  If two of three tests fail, the report says 2 failed, 1 passed. Do not hide failures.
-H05  README and phase reports must list residual risk and open blockers.
-H06  Do not invent citations, expert scores, customers, credentials, or benchmark numbers.
+PHASE A — CONTROL HARDENING
+----------------------------------------------------------------
+Watermark intact requires the four renderer meta tags, not a bare
+substring. Review UI sends the authenticated session user id; remove
+hardcoded reviewer id 00000000-0000-4000-8000-000000000001.
+OpenAPI 3.1 for existing routes only. Swagger UI at /docs.
+docs/testing/test-home.md lists executed tests and skipped live tests.
+Root 30-second English demo runs the golden suite and prints the status
+line plus open limitations. README link package: repository, phase
+reports, scorecard, protocol, test home, /docs. No invented live URL.
+Gate: pnpm typecheck, pnpm test, pnpm lint exit 0. Stop.
 
-ROLE LOCK
-----------------------------------------------------------------------------------------------------
-R01  Execute only the phase named in the operator's latest short instruction.
-R02  If no phase is named, stop and ask. Do not assume Phase 1.
-R03  At the end of a phase, stop. Do not start the next phase.
-R04  Do not add features, agents, modules, or vendors not required by the current phase.
-R05  Do not delete existing work unless this file says to replace it.
-R06  Do not weaken a test to make it pass.
-R07  Do not call a live LLM. Use DeterministicFakeProvider unless a later revision allows otherwise.
-R08  Do not accept client-supplied tenant_id as the isolation authority.
-R09  Do not log secrets, raw documents, or full prompts.
-R10  Commit and push only after the phase gate commands exited 0, and only if that phase says commit.
-     Message form: "phase-N: <name>  -  gate passed".
-R11  If a gate cannot be run, the phase is not passed. Report the blocker.
-R12  Material decisions not frozen here require an ADR and a stop for human approval.
-R13  This file stays at the root. Do not replace it per phase. Do not translate it.
+PHASE B — RUNNABLE BEACHHEAD AND PDF
+----------------------------------------------------------------
+One operator path from an approved M03 content model to HTML and
+manifest through the fake provider. Same inputs, same HTML sha256.
+Add one pinned offline PDF library. Emit real PDF bytes from that HTML.
+No remote PDF service. No fake bytes. If it cannot be pinned, keep
+"not_built" and record the blocker. Watermark and status line are in
+the PDF. Unknown assertion keys stay dropped. No invented claim.
+Gate: pnpm typecheck, pnpm test, pnpm lint exit 0. Stop.
 
-ENGINEERING INVARIANT
-----------------------------------------------------------------------------------------------------
-"1000% deterministic" is a quality slogan, not a proof of identical LLM semantics.
-Required invariant: versioned inputs, pinned prompt/model/schema/policy, constrained generation,
-validation, reproducible build, immutable audit, human approval where required.
-Temperature=0 is not factual correctness.
+PHASE C — PHONE TEST SURFACE
+----------------------------------------------------------------
+PWA manifest and service worker for apps/web. Add to Home Screen opens
+the existing web app. Status line visible.
+docs/testing/phone-install.md for iOS Safari and Android Chrome.
+Gate exit 0. Stop.
 
-FROZEN DECISIONS
-----------------------------------------------------------------------------------------------------
-Beachhead is M03 only: Architecture Decision Record + System Blueprint.
-Do not implement modules M01-M02 or M04-M30.
-Vertical slice: source -> ingest -> evidence -> architect -> generate -> guard
--> human review -> doc engine -> build manifest -> release -> audit.
-Agents, four only: AlinaArchitect, AlinaGuard, AlinaDocEngine, AlinaOptimizer.
-Audio engine, data room, billing charges, regulated autonomy: deferred. Do not build them.
-Published artifacts are immutable. Source bytes are immutable.
-Never invent DOI, PMID, ISBN, patent number, author, page, or experimental result.
-Product sentence, exact: "Turn complex evidence into auditable professional artifacts."
-Do not write: "AI writes your documents."
+PHASE D — PROVENANCE AND TRACE
+----------------------------------------------------------------
+Merkle provenance ledger over source version, content hash, manifest,
+and html sha256. Artifact time-travel diff between two stored builds.
+Code-to-document trace from a cited path to the claim and the rendered
+section. Append-only. Tenant isolated. Tests for tamper detection,
+deterministic diff, and missing-trace rejection. Gate exit 0. Stop.
 
-STACK (MANDATORY)
-----------------------------------------------------------------------------------------------------
-TypeScript strict, Node 22, pnpm workspaces, Next.js App Router in apps/web,
-Node HTTP API in apps/api, packages/domain, packages/db, packages/contracts, packages/renderer.
-PostgreSQL 16 with RLS. Redis 7. Local filesystem object-storage driver for dev/test.
-argon2id. zod at boundaries. UUID generated server-side. UTC storage.
-SQL migrations, forward-only. Vitest. GitHub Actions for typecheck, test, lint.
-No fashionable replacement framework.
+PHASE E — TEMPLATES AND CONSENSUS
+----------------------------------------------------------------
+Schema-driven M03 template: render only keys declared by the pinned
+schema. Multi-party consensus review: N named approvers, threshold,
+no self-approval, decision event append-only. Published bytes do not
+change. Tests for unknown key dropped, threshold not met, and
+self-approval rejected. Gate exit 0. Stop.
 
-PHASE PROTOCOL
-----------------------------------------------------------------------------------------------------
-Start: read this file, inspect the repo, write docs/phases/phase-N-plan.md with in-scope items only.
-End: run the gate, write docs/phases/phase-N-report.md with commands, exit codes, failures, residuals.
-Then commit if the gate passed and the phase allows it. Then stop.
-
-====================================================================================================
-PHASE 1  -  REPOSITORY CONTRACT AND CINEMATIC README
-====================================================================================================
-Build the skeleton only. No database. No auth. No agent runtime.
-
-Create pnpm workspace, tsconfig strict, eslint, prettier, vitest, .gitignore.
-apps/web: one page, status line exact, positioning sentence exact.
-apps/api: GET /health -> {"status":"ok","version":"1.0.0","maturity":"enterprise-candidate"}.
-packages/domain: workflow states and illegal-transition tests.
-docs/adr/ADR-0001-beachhead-m03.md
-docs/adr/ADR-0002-stack.md
-docs/adr/ADR-0003-determinism-and-honesty.md
-docs/security/threat-model-v0.md
-CI workflow.
-
-README.md must be cinematic, not a label.
-Required: animated SVG (SMIL or CSS animation inside SVG; GitHub strips script) showing four
-distinct agents  -  AlinaArchitect, AlinaGuard, AlinaDocEngine, AlinaOptimizer  -  as a moving
-evidence-to-artifact flow. Futuristic, restrained, high contrast, no cartoon mascots, no fake
-metrics. Include a short motion caption and a static fallback paragraph so the file still informs
-if animation does not play. Honesty block at top: Enterprise Candidate  -  Active Development.
-Author block verbatim:
-
-Lead AI Architect: Amin Azimi
-Focus: End-to-End System Development and Business Challenge Architecture
-Innovation Lab: Azimi Innovation Lab
-Project Version: 1.0.0
-Project Start Date: October 2026
-
-AlinaMatrix Enterprise is a professional AI document engineering and evidence-control platform
-designed for expert users who require structured synthesis, provenance, validation, reproducible
-artifact generation and controlled human review.
-
-Known limitations section must say the beachhead is not yet proven and no production claim is made.
-Do not write "cinematic readme" as a heading instead of building the animation.
-All README text is English.
-
-Gate: pnpm typecheck; pnpm test; pnpm lint. All must exit 0.
-Commit: yes, only if gate passed. Stop.
-
-====================================================================================================
-PHASE 2  -  IDENTITY, TENANCY, RLS, AUDIT
-====================================================================================================
-PostgreSQL schema: tenants, users, memberships, roles, projects, audit_events.
-RLS USING and WITH CHECK. Unset app.current_tenant_id fails closed.
-Tenant context is server-derived from membership, transaction-local.
-argon2id login/logout. Cookie httpOnly, Secure, SameSite=Lax.
-Object storage local driver, key prefix tenant_id, reject path traversal.
-Logger redacts secret-shaped strings. docker-compose: postgres and redis only.
-Fixture seed: two tenants, two users, marked fixture.
-
-Tests: tenant A cannot read or write tenant B; missing tenant setting returns no rows;
-path traversal rejected; cookie flags; audit update/delete denied.
-Commit if gate passed. Stop.
-Out of scope: SSO, sources, agents, billing.
-
-====================================================================================================
-PHASE 3  -  IMMUTABLE SOURCE AND FRAGMENTS
-====================================================================================================
-Tables: sources, source_versions, source_fragments, evidence_items.
-Upload pdf, txt, md, docx. Size cap. MIME sniff. Reject mismatch.
-Store original bytes and sha256. Second write of the same version bytes is rejected.
-Extract txt and md. PDF text only if a local parser works offline. On failure:
-FAILED_TERMINAL with a visible English reason. Do not invent text.
-Fragment: ordinal, page if known, text, span, hash.
-Idempotency key. Duplicate key does not create a second source version.
-Audit upload and extraction failure.
-Tests: immutability, idempotency, tenant isolation, failed extraction does not become ready.
-Commit if gate passed. Stop.
-Out of scope: OCR vendor, audio, web fetch, embeddings, claims.
-
-====================================================================================================
-PHASE 4  -  CLAIM ATOMS AND PROVENANCE
-====================================================================================================
-Tables: claims, citations, assumptions, terminology_entries.
-Claim atom fields: subject, predicate, object, qualifier, time_scope, unit, claim_text (display only),
-claim_type witnessed|inferred|assumption, support_status supported|weak|unsupported|conflicting|not_applicable,
-negative_evidence_note required when supported or inferred, evidence_ids, confidence,
-contradiction_status, generated flag, reviewer_status.
-Citation status, distinct: discovered, retrieved, parsed, supports_claim, conflicts_with_claim, unverified.
-No API field that lets a client invent DOI or PMID.
-Quote-lock: witnessed quote must equal fragment substring and hash.
-Numeric reconciliation flags unit mismatch. No auto-correct.
-Terminology unique per project.
-Graph query by claim_id over SUPPORTS, CONTRADICTS, DERIVED_FROM rows. No graph database.
-Tests: quote-lock mismatch fails; unsupported cannot be stored as supported; tenant isolation.
-Commit if gate passed. Stop.
-Out of scope: LLM extraction. Fixture importer allowed for tests.
-
-====================================================================================================
-PHASE 5  -  JOBS, FOUR AGENT CONTRACTS, FAKE PROVIDER
-====================================================================================================
-Tables: agents, agent_versions, model_versions, prompt_versions, schema_versions, policy_versions,
-workflows, workflow_runs, processing_jobs, job_events, agent_runs, usage_events, cache_entries.
-Seed four agents. Capabilities:
-Architect: READ_SOURCE, READ_EVIDENCE, WRITE_DRAFT.
-Guard: READ_EVIDENCE, RUN_VALIDATION.
-DocEngine: COMPILE_ARTIFACT.
-Optimizer: READ_USAGE, WRITE_CACHE_METADATA.
-None may release or export.
-DeterministicFakeProvider: same prompt version, schema version, and input hash -> same JSON.
-Idempotent jobs. Cancelled job cannot later publish.
-Usage row on every fake call: tenant, project, agent, model version, token counts, cost minor units.
-Cache key includes tenant_id, source versions, prompt, model, schema, policy. Cross-tenant miss.
-States: INGESTED, CLASSIFIED, EXTRACTED, EVIDENCE_READY, ARCHITECTED, GENERATED, VALIDATING,
-NEEDS_REVIEW, APPROVED, BUILDING, BUILT, RELEASED, plus FAILED_RETRYABLE, FAILED_TERMINAL,
-CANCELLED, EXPIRED, QUARANTINED. Illegal jumps rejected. No raw-to-RELEASED path.
-Tests: illegal transition, duplicate job, cancelled cannot publish, capability denial, cache isolation.
-Commit if gate passed. Stop.
-
-====================================================================================================
-PHASE 6  -  M03 ARCHITECT, GENERATE, GUARD
-====================================================================================================
-Content model: Metadata, Context, Decision, Status, Drivers, Options, Outcome, Consequences,
-Evidence map, Claim atoms, Assumptions, Negative evidence, Terminology, Risks, Open questions,
-Review, Approval, Limitations, Release metadata.
-Architect writes a plan only. Generate may reference existing claim ids only.
-Guard rules, deterministic: schema, quote-lock, unsupported blocks ready, contradiction forces
-NEEDS_REVIEW, missing negative evidence fails, terminology drift fails.
-Prompt-injection fixture in source text must not change the plan.
-Workflow may reach GENERATED, VALIDATING, NEEDS_REVIEW. Not RELEASED.
-Tests: same input -> same plan hash; injection ignored; contradiction stops; Architect cannot release.
-Commit if gate passed. Stop.
-
-====================================================================================================
-PHASE 7  -  HUMAN REVIEW
-====================================================================================================
-Tables: review_tasks, approvals, comments. Comments immutable; correction is a new row.
-API for three panes: fragments, content section, findings.
-Claim-level approve/reject. Reject keeps NEEDS_REVIEW.
-Four-eyes: author cannot be the sole release approver.
-Minimal dense UI: projects, sources, claim inspector, review queue. Explicit English errors.
-No decorative motion in the app. Motion belongs in the README only.
-Tests: self-approval denied; rejected claim blocks completion; comment update denied; tenant isolation.
-Commit if gate passed. Stop.
-
-====================================================================================================
-PHASE 8  -  RENDERER AND BUILD MANIFEST
-====================================================================================================
-Render HTML only from the approved content model. Drop unknown assertion keys.
-Include limitations, assumptions, evidence map, approvals.
-Watermark metadata: tenant, artifact version, build id, time.
-Manifest: content hash, source version ids, prompt, model, schema, policy, renderer, template,
-build id, time, sha256 of HTML.
-Replay test: same inputs -> same HTML sha256.
-Published row content update rejected by trigger.
-PDF only if a local pinned renderer works offline without a new network install. Else record
-"PDF not built" as an open limitation. Do not fake PDF bytes.
-Tests: replay, no invented claim in HTML, immutability, manifest pins present.
-Commit if gate passed. Stop.
-
-====================================================================================================
-PHASE 9  -  RELEASE GATE, EXPORT, BUDGET
-====================================================================================================
-Release function requires: validations pass, critical findings = 0, four-eyes approvals,
-manifest, checksum, source versions, version pins, source job not failed or cancelled.
-Labels: DRAFT, INTERNAL_REVIEW, APPROVED, PUBLISHED, ARCHIVED, REVOKED.
-Revoke writes an event. It does not mutate published bytes.
-Export HTML only with permission. Audit it. Watermark intact.
-Project budget hard stop. Over budget does not call the provider.
-Audit append-only.
-Tests: missing approval blocks; critical finding blocks; revoke preserves bytes; audit update denied;
-budget breach skips provider; export without permission denied.
-Commit if gate passed. Stop.
-
-====================================================================================================
-PHASE 10  -  EVALUATION EVIDENCE AND HONEST SCORECARD
-====================================================================================================
-No new product surface except fixtures and docs.
-Golden fixtures: happy ADR, contradiction, prompt injection, missing citation, unit mismatch,
-cross-tenant attempt.
-Test command writes docs/eval/m03-latest.md from results. Do not hand-edit passes.
-Security notes for auth bypass, authz bypass, tenant breach, prompt injection, bad upload, XSS, SQL
-injection: passed only if a test passed; otherwise "not covered" or "failed".
-docs/runbooks/backup-restore.md and a local drill script. Do not claim regional disaster recovery.
-docs/eval/expert-acceptance-protocol.md with blank scores.
-docs/release/scorecard.md. Any open critical blocker forces FAIL. Do not average it away.
-README claims audit against evidence. Status remains Enterprise Candidate  -  Active Development.
-Pre-launch blockers stay open unless a recorded test closed them.
-Gate: full suite. Report counts of passed and failed. Commit only if the suite exit code is 0
-and the report still lists open limitations honestly. Stop. Do not declare production.
-
-====================================================================================================
-ADDITIVE CONTROLS  -  DO NOT PULL FORWARD
-====================================================================================================
-Phase 4: claim atoms, negative evidence, quote-lock, numeric reconciliation, terminology lock.
-Phase 5: token provenance on usage, cache tenant key.
-Phase 6: assumption register, injection fixture.
-Phase 7: claim-level review, four-eyes.
-Phase 8: render oracle fields, watermark.
-Phase 9: budget breaker, revocation lineage.
-Phase 10: replay via golden tests, blank expert protocol.
-Deferred: audio, half-life policy, retraction hook, bilingual model, customer-managed keys,
-shadow live model, airgap, legal hold, modules other than M03.
-
-OPERATOR SHORT COMMAND
-----------------------------------------------------------------------------------------------------
-Execute Phase N of DIRECTIVE.txt only. Stop at the phase gate. Do not start Phase N+1.
-
-END OF DIRECTIVE
-ALINAMATRIX ENTERPRISE  -  ENTERPRISE CANDIDATE  -  ACTIVE DEVELOPMENT
-(C) 2026 Amin Azimi  -  Azimi Innovation Lab. All Rights Reserved.
-====================================================================================================
+PHASE F — RENDER CANDIDATE
+----------------------------------------------------------------
+Render blueprint: web, api, Postgres. Secrets from the host environment.
+Do not commit secrets. If deploy cannot run here, write the blueprint
+and stop. Do not invent URLs. If deploy runs, record web, api, and
+/docs URLs in the README link package.
+Label, exact: "Render candidate — not production".
+Update docs/release/scorecard.md only for a check a recorded test
+closed. Leave every other blocker open. Gate exit 0. Stop.
+Do not add Phase G.
+================================================================
