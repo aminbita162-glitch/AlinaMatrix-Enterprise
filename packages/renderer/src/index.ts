@@ -8,3 +8,14 @@
 export { renderHtml, renderWatermark } from "./html.js";
 export { renderPdf, PdfNotAvailableError } from "./pdf.js";
 export type { RenderPdfResult } from "./pdf.js";
+export {
+  buildManifest,
+  computeHtmlSha256,
+  renderPipeline,
+} from "./manifest.js";
+export type {
+  BuildManifestParams,
+  BuildManifestResult,
+  RenderPipelineParams,
+  RenderPipelineResult,
+} from "./manifest.js";
