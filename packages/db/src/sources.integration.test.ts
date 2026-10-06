@@ -226,3 +226,114 @@ describeIf("RLS live — sources: Tenant A vs Tenant B isolation", () => {
     ).rejects.toThrow();
   });
 });
+
+// ================================================================
+// source_versions — RLS live tests
+// ================================================================
+describeIf("RLS live — source_versions: Tenant A vs Tenant B isolation", () => {
+  it("Tenant A context sees its own version row", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_A,
+      "SELECT id FROM source_versions WHERE id = $1",
+      [VERSION_A],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe(VERSION_A);
+  });
+
+  it("Tenant B context sees its own version row", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_B,
+      "SELECT id FROM source_versions WHERE id = $1",
+      [VERSION_B],
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe(VERSION_B);
+  });
+
+  it("Tenant A context cannot read Tenant B version", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_A,
+      "SELECT id FROM source_versions WHERE id = $1",
+      [VERSION_B],
+    );
+    expect(rows).toHaveLength(0);
+  });
+
+  it("Tenant B context cannot read Tenant A version", async () => {
+    const rows = await queryAs<{ id: string }>(
+      TENANT_B,
+      "SELECT id FROM source_versions WHERE id = $1",
+      [VERSION_A],
+    );
+    expect(rows).toHaveLength(0);
+  });
+
+  it("missing tenant context returns no rows from source_versions — fail closed", async () => {
+    const rows = await queryNoContext<{ id: string }>("SELECT id FROM source_versions");
+    expect(rows).toHaveLength(0);
+  });
+
+  it("Tenant A cannot INSERT a version into Tenant B (WITH CHECK rejects)", async () => {
+    await expect(
+      queryAs(
+        TENANT_A,
+        `INSERT INTO source_versions
+           (source_id, tenant_id, sha256, size_bytes, storage_path, idempotency_key)
+         VALUES ($1, $2, $3, 10, 'x/y', 'cross-key')`,
+        [SOURCE_B, TENANT_B, "c".repeat(64)],
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("source_versions DELETE is silently blocked (no DELETE policy — 0 rows affected)", async () => {
+    const before = await withTransaction(suPool, async (c: pg.PoolClient) => {
+      const r = await c.query<{ count: string }>(
+        "SELECT count(*)::text AS count FROM source_versions WHERE id = $1",
+        [VERSION_A],
+      );
+      return Number(r.rows[0]?.count ?? "0");
+    });
+    expect(before).toBe(1);
+
+    // app_user DELETE — no DELETE policy means 0 rows affected (silent deny)
+    await queryAs(
+      TENANT_A,
+      "DELETE FROM source_versions WHERE id = $1",
+      [VERSION_A],
+    );
+
+    const after = await withTransaction(suPool, async (c: pg.PoolClient) => {
+      const r = await c.query<{ count: string }>(
+        "SELECT count(*)::text AS count FROM source_versions WHERE id = $1",
+        [VERSION_A],
+      );
+      return Number(r.rows[0]?.count ?? "0");
+    });
+    // Row is still there — DELETE was silently blocked by absence of DELETE policy
+    expect(after).toBe(1);
+  });
+
+  it("source_versions status UPDATE is allowed within tenant (sv_update_status policy)", async () => {
+    await queryAs(
+      TENANT_A,
+      "UPDATE source_versions SET status = 'EXTRACTED' WHERE id = $1",
+      [VERSION_A],
+    );
+
+    const rows = await withTransaction(suPool, async (c: pg.PoolClient) => {
+      const r = await c.query<{ status: string }>(
+        "SELECT status FROM source_versions WHERE id = $1",
+        [VERSION_A],
+      );
+      return r.rows;
+    });
+    expect(rows[0]?.status).toBe("EXTRACTED");
+
+    // Reset to INGESTED for other test isolation
+    await suPool.query(
+      "UPDATE source_versions SET status = 'INGESTED' WHERE id = $1",
+      [VERSION_A],
+    );
+  });
+});
