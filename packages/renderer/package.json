@@ -17,9 +17,11 @@
   },
   "dependencies": {
     "@alinamatrix/contracts": "workspace:^",
-    "@alinamatrix/domain": "workspace:^"
+    "@alinamatrix/domain": "workspace:^",
+    "pdfkit": "0.20.2"
   },
   "devDependencies": {
+    "@types/pdfkit": "^0.17.6",
     "typescript": "^5.5.4",
     "vitest": "^2.1.0"
   }

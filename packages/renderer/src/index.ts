@@ -6,7 +6,7 @@
  * Status: Enterprise Candidate — Active Development
  */
 export { renderHtml, renderWatermark } from "./html.js";
-export { renderPdf, PdfNotAvailableError } from "./pdf.js";
+export { renderPdf, PdfNotAvailableError, computePdfContentSha256 } from "./pdf.js";
 export type { RenderPdfResult } from "./pdf.js";
 export { buildWatermark } from "./watermark.js";
 export type { BuildWatermarkParams } from "./watermark.js";
