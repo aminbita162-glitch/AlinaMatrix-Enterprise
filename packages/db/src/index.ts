@@ -204,3 +204,14 @@ export type {
   RevocationPriorLabel,
   InsertRevocationEventParams,
 } from "./revocation.js";
+
+// Phase D — provenance ledger (append-only)
+export {
+  insertProvenanceLedgerEntry,
+  listProvenanceLedgerByArtifact,
+  getProvenanceLedgerRoot,
+} from "./provenance.js";
+export type {
+  ProvenanceLedgerRow,
+  InsertProvenanceLedgerParams,
+} from "./provenance.js";

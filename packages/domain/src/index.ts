@@ -153,3 +153,16 @@ export {
 export type {
   RevokeReleaseInput,
 } from "./revocation.js";
+
+// Phase D — provenance ledger
+export {
+  computeLeafHash,
+  computeManifestSha256,
+  computeMerkleRoot,
+  buildProvenanceLedgerEntry,
+  verifyProvenanceLedger,
+  ProvenanceLedgerError,
+} from "./provenance.js";
+export type {
+  BuildProvenanceLedgerEntryInput,
+} from "./provenance.js";

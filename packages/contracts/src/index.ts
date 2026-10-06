@@ -271,3 +271,14 @@ export {
 export type {
   RevocationEvent,
 } from "./revocation.js";
+
+// Phase D — provenance ledger
+export {
+  ProvenanceLeafSchema,
+  ProvenanceLedgerEntrySchema,
+} from "./provenance.js";
+
+export type {
+  ProvenanceLeaf,
+  ProvenanceLedgerEntry,
+} from "./provenance.js";
