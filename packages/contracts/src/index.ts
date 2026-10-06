@@ -238,3 +238,14 @@ export type {
   ReleaseGateInput,
   ReleaseGateResult,
 } from "./release.js";
+
+// Phase 9 — export contracts
+export {
+  ExportPermissionSchema,
+  ExportBundleResultSchema,
+} from "./export.js";
+
+export type {
+  ExportPermission,
+  ExportBundleResult,
+} from "./export.js";
