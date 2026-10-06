@@ -1,7 +1,8 @@
 /**
  * HTTP router for apps/api.
  * Routes: GET /health, POST /auth/login, POST /auth/logout,
- *         POST /sources/upload, GET /sources/:id
+ *         POST /sources/upload, GET /sources/:id,
+ *         Phase 7 review routes.
  *
  * Status: Enterprise Candidate — Active Development
  */
@@ -13,6 +14,17 @@ import { logger } from "./logger.js";
 import type { AuthDb } from "./auth.js";
 import type { IngestDb } from "./ingest.js";
 import type { ObjectStorage } from "./storage.js";
+import {
+  handleCreateReviewTask,
+  handleGetReviewTask,
+  handleListReviewTasks,
+  handleCreateApproval,
+  handleListApprovals,
+  handleCreateComment,
+  handleListComments,
+  handleClaimDecision,
+} from "./review.js";
+import type { ReviewDb } from "./review.js";
 
 export interface HealthResponse {
   status: "ok";
@@ -260,9 +272,10 @@ async function handleUpload(
 // ============================================================
 
 export interface RouterDeps {
-  authDb?:   AuthDb;
-  ingestDb?: IngestDb;
-  storage?:  ObjectStorage;
+  authDb?:    AuthDb;
+  ingestDb?:  IngestDb;
+  storage?:   ObjectStorage;
+  reviewDb?:  ReviewDb;
 }
 
 /**
@@ -276,7 +289,7 @@ export function router(deps: RouterDeps | AuthDb = {}) {
       ? { authDb: deps as AuthDb }
       : (deps as RouterDeps);
 
-  const { authDb, ingestDb, storage } = resolved;
+  const { authDb, ingestDb, storage, reviewDb } = resolved;
 
   return function route(req: IncomingMessage, res: ServerResponse): void {
     const url = req.url ?? "/";
@@ -323,6 +336,180 @@ export function router(deps: RouterDeps | AuthDb = {}) {
       }
       handleUpload(req, res, authDb, ingestDb, storage).catch((err: unknown) => {
         logger.error("upload handler error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    // --------------------------------------------------------
+    // Review routes (Phase 7)
+    // --------------------------------------------------------
+
+    // POST /review-tasks
+    if (method === "POST" && url === "/review-tasks") {
+      if (!authDb || !reviewDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      void (async () => {
+        const session = await resolveSession(authDb, req.headers["cookie"]);
+        if (!session) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized" }));
+          return;
+        }
+        await handleCreateReviewTask(req, res, reviewDb, session.tenantId);
+      })().catch((err: unknown) => {
+        logger.error("review task create error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    // GET /review-tasks
+    if (method === "GET" && url === "/review-tasks") {
+      if (!authDb || !reviewDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      void (async () => {
+        const session = await resolveSession(authDb, req.headers["cookie"]);
+        if (!session) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized" }));
+          return;
+        }
+        await handleListReviewTasks(req, res, reviewDb, session.tenantId);
+      })().catch((err: unknown) => {
+        logger.error("review task list error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    // GET /review-tasks/:taskId
+    const reviewTaskGetMatch = /^\/review-tasks\/([0-9a-f-]{36})$/.exec(url);
+    if (method === "GET" && reviewTaskGetMatch) {
+      const taskId = reviewTaskGetMatch[1]!;
+      if (!reviewDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      handleGetReviewTask(req, res, reviewDb, taskId).catch((err: unknown) => {
+        logger.error("review task get error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    // POST /review-tasks/:taskId/approvals
+    const approvalCreateMatch = /^\/review-tasks\/([0-9a-f-]{36})\/approvals$/.exec(url);
+    if (method === "POST" && approvalCreateMatch) {
+      const taskId = approvalCreateMatch[1]!;
+      if (!authDb || !reviewDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      void (async () => {
+        const session = await resolveSession(authDb, req.headers["cookie"]);
+        if (!session) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized" }));
+          return;
+        }
+        await handleCreateApproval(req, res, reviewDb, session.tenantId, taskId);
+      })().catch((err: unknown) => {
+        logger.error("approval create error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    // GET /review-tasks/:taskId/approvals
+    if (method === "GET" && approvalCreateMatch) {
+      const taskId = approvalCreateMatch[1]!;
+      if (!reviewDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      handleListApprovals(req, res, reviewDb, taskId).catch((err: unknown) => {
+        logger.error("approval list error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    // POST /review-tasks/:taskId/comments
+    const commentCreateMatch = /^\/review-tasks\/([0-9a-f-]{36})\/comments$/.exec(url);
+    if (method === "POST" && commentCreateMatch) {
+      const taskId = commentCreateMatch[1]!;
+      if (!authDb || !reviewDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      void (async () => {
+        const session = await resolveSession(authDb, req.headers["cookie"]);
+        if (!session) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized" }));
+          return;
+        }
+        await handleCreateComment(req, res, reviewDb, session.tenantId, taskId);
+      })().catch((err: unknown) => {
+        logger.error("comment create error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    // GET /review-tasks/:taskId/comments
+    if (method === "GET" && commentCreateMatch) {
+      const taskId = commentCreateMatch[1]!;
+      if (!reviewDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      handleListComments(req, res, reviewDb, taskId).catch((err: unknown) => {
+        logger.error("comment list error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    // POST /claims/:claimId/decision
+    const claimDecisionMatch = /^\/claims\/([0-9a-f-]{36})\/decision$/.exec(url);
+    if (method === "POST" && claimDecisionMatch) {
+      const claimId = claimDecisionMatch[1]!;
+      if (!authDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      void (async () => {
+        const session = await resolveSession(authDb, req.headers["cookie"]);
+        if (!session) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized" }));
+          return;
+        }
+        await handleClaimDecision(req, res, claimId);
+      })().catch((err: unknown) => {
+        logger.error("claim decision error", { error: (err as Error).message });
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Internal server error" }));
       });

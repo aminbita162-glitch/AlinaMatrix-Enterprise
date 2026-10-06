@@ -4,6 +4,31 @@
  */
 
 export {
+  ReviewTaskStateSchema,
+  CreateReviewTaskRequestSchema,
+  ReviewTaskResponseSchema,
+  ApprovalDecisionSchema,
+  CreateApprovalRequestSchema,
+  ApprovalResponseSchema,
+  CreateCommentRequestSchema,
+  CommentResponseSchema,
+  ClaimDecisionRequestSchema,
+} from "./review.js";
+
+export type {
+  ReviewTaskState,
+  CreateReviewTaskRequest,
+  ReviewTaskResponse,
+  ApprovalDecision,
+  CreateApprovalRequest,
+  ApprovalResponse,
+  CreateCommentRequest,
+  CommentResponse,
+  ClaimDecisionRequest,
+} from "./review.js";
+
+
+export {
   LoginRequestSchema,
   LoginResponseSchema,
   SessionSchema,
