@@ -116,3 +116,28 @@ export type {
   M03PlanRow,
   M03DraftRow,
 } from "./m03.js";
+
+export {
+  insertReviewTask,
+  getReviewTask,
+  getReviewTaskByRun,
+  listReviewTasksByProject,
+  listOpenReviewTasks,
+  updateReviewTaskState,
+  insertApproval,
+  getApproval,
+  listApprovalsByTask,
+  insertComment,
+  getComment,
+  listCommentsByTask,
+} from "./review.js";
+export type {
+  ReviewTaskRow,
+  ApprovalRow,
+  CommentRow,
+  ReviewTaskState,
+  ApprovalDecision,
+  InsertReviewTaskParams,
+  InsertApprovalParams,
+  InsertCommentParams,
+} from "./review.js";
