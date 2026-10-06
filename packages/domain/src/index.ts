@@ -124,3 +124,17 @@ export {
 export type {
   ReleaseLabel,
 } from "./release.js";
+
+// Phase 9 — export bundle and permission
+export {
+  ExportPermissionError,
+  WatermarkIntactError,
+  assertExportPermission,
+  buildExportBundle,
+  isWatermarkIntact,
+} from "./export.js";
+export type {
+  ExportPermissionInput,
+  ExportBundleInput,
+  ExportBundleResult,
+} from "./export.js";

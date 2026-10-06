@@ -171,3 +171,13 @@ export type {
   InsertReleaseLabelParams,
   PublishReleaseLabelParams,
 } from "./release.js";
+
+// Phase 9 — export audit (append-only)
+export {
+  insertExportAudit,
+  listExportAuditByArtifact,
+} from "./export-audit.js";
+export type {
+  ExportAuditRow,
+  InsertExportAuditParams,
+} from "./export-audit.js";
