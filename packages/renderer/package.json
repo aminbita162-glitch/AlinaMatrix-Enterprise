@@ -16,7 +16,8 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@alinamatrix/contracts": "workspace:^"
+    "@alinamatrix/contracts": "workspace:^",
+    "@alinamatrix/domain": "workspace:^"
   },
   "devDependencies": {
     "typescript": "^5.5.4",

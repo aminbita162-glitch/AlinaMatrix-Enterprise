@@ -148,6 +148,9 @@ importers:
       '@alinamatrix/contracts':
         specifier: workspace:^
         version: link:../contracts
+      '@alinamatrix/domain':
+        specifier: workspace:^
+        version: link:../domain
     devDependencies:
       typescript:
         specifier: ^5.5.4

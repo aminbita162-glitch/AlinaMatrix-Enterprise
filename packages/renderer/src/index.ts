@@ -21,3 +21,11 @@ export type {
   RenderPipelineParams,
   RenderPipelineResult,
 } from "./manifest.js";
+
+// Phase B — operator beachhead path
+export { renderBeachhead } from "./beachhead.js";
+export type {
+  BeachheadInput,
+  BeachheadResult,
+  BeachheadVersionPins,
+} from "./beachhead.js";
