@@ -113,4 +113,6 @@ export {
 export type {
   InsertM03PlanParams,
   InsertM03DraftParams,
+  M03PlanRow,
+  M03DraftRow,
 } from "./m03.js";

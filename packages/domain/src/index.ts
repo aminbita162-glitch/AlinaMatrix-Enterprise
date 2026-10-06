@@ -60,3 +60,13 @@ export type {
   FakeProviderInput,
   FakeProviderOutput,
 } from "./agents.js";
+
+export {
+  runArchitectPlan,
+  assertArchitectCannotRelease,
+} from "./architect.js";
+export type {
+  ArchitectPlanInput,
+  ArchitectPlanVersionPins,
+  ArchitectPlanResult,
+} from "./architect.js";

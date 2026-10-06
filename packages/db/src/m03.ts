@@ -9,7 +9,41 @@
  */
 import { v4 as uuidv4 } from "uuid";
 import type { DbClient } from "./client.js";
-import type { M03PlanRow, M03DraftRow } from "@alinamatrix/contracts";
+
+// Row types defined here to avoid a cross-package import cycle.
+// They mirror M03PlanRow / M03DraftRow in packages/contracts/src/m03.ts.
+
+export interface M03PlanRow {
+  id:                 string;
+  tenant_id:          string;
+  project_id:         string;
+  workflow_run_id:    string;
+  agent_version_id:   string;
+  prompt_version_id:  string;
+  schema_version_id:  string;
+  policy_version_id:  string;
+  source_version_ids: string[];
+  input_hash:         string;
+  content_json:       Record<string, unknown>;
+  plan_hash:          string;
+  created_at:         Date;
+}
+
+export interface M03DraftRow {
+  id:                 string;
+  tenant_id:          string;
+  project_id:         string;
+  workflow_run_id:    string;
+  plan_id:            string;
+  agent_version_id:   string;
+  prompt_version_id:  string;
+  schema_version_id:  string;
+  policy_version_id:  string;
+  claim_ids:          string[];
+  content_json:       Record<string, unknown>;
+  draft_hash:         string;
+  created_at:         Date;
+}
 
 // ============================================================
 // Insert M03 plan
