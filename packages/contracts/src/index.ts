@@ -204,3 +204,24 @@ export type {
   UsageEventResponse,
   CacheEntryResponse,
 } from "./agents.js";
+
+// Phase 8 — render contracts
+export {
+  WatermarkSchema,
+  RenderVersionPinsSchema,
+  RenderInputSchema,
+  RenderManifestSchema,
+  RenderResultSchema,
+  PdfStatusSchema,
+  PdfResultSchema,
+} from "./render.js";
+
+export type {
+  Watermark,
+  RenderVersionPins,
+  RenderInput,
+  RenderManifest,
+  RenderResult,
+  PdfStatus,
+  PdfResult,
+} from "./render.js";
