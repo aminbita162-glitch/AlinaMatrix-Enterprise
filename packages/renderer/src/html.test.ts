@@ -231,3 +231,103 @@ describe("renderWatermark", () => {
     expect(a).toBe(b);
   });
 });
+
+// ===========================================================================
+// Phase E — schema-driven template rendering (renderHtmlTemplate)
+// ===========================================================================
+
+import { renderHtmlTemplate } from "./html.js";
+import { M03_DEFAULT_TEMPLATE } from "@alinamatrix/domain";
+import type { M03Template } from "@alinamatrix/contracts";
+
+describe("renderHtmlTemplate (Phase E — schema-driven template)", () => {
+  it("produces identical output to renderHtml for the default template", () => {
+    const a = renderHtml(makeRenderInput(baseContent));
+    const b = renderHtmlTemplate(makeRenderInput(baseContent), M03_DEFAULT_TEMPLATE);
+    expect(a).toBe(b);
+  });
+
+  it("renders only the declared sections for a partial template", () => {
+    const partial: M03Template = {
+      id:      "m03-partial-test",
+      version: "1.0.0",
+      sections: [
+        { key: "metadata",    label: "Metadata" },
+        { key: "context",     label: "Context" },
+        { key: "limitations", label: "Limitations" },
+      ],
+    };
+    const html = renderHtmlTemplate(makeRenderInput(baseContent), partial);
+    expect(html).toContain('class="metadata"');
+    expect(html).toContain('class="context"');
+    expect(html).toContain('class="limitations"');
+    // Sections NOT in the partial template are not rendered.
+    expect(html).not.toContain('class="drivers"');
+    expect(html).not.toContain('class="risks"');
+    expect(html).not.toContain('class="assumptions"');
+  });
+
+  it("drops unknown keys (not in the template)", () => {
+    const contentWithUnknown = {
+      ...baseContent,
+      bogusUnknownKey: "should not appear in HTML",
+    };
+    const html = renderHtmlTemplate(
+      makeRenderInput(contentWithUnknown),
+      M03_DEFAULT_TEMPLATE,
+    );
+    expect(html).not.toContain("bogusUnknownKey");
+    expect(html).not.toContain("should not appear in HTML");
+  });
+
+  it("is deterministic: same template + same input produce identical output", () => {
+    const a = renderHtmlTemplate(
+      makeRenderInput(baseContent),
+      M03_DEFAULT_TEMPLATE,
+    );
+    const b = renderHtmlTemplate(
+      makeRenderInput(baseContent),
+      M03_DEFAULT_TEMPLATE,
+    );
+    expect(a).toBe(b);
+  });
+
+  it("published bytes do not change: different template produces different output", () => {
+    const partial: M03Template = {
+      id:      "m03-partial-test-2",
+      version: "1.0.0",
+      sections: [
+        { key: "metadata", label: "Metadata" },
+        { key: "context",  label: "Context" },
+      ],
+    };
+    const full = renderHtmlTemplate(
+      makeRenderInput(baseContent),
+      M03_DEFAULT_TEMPLATE,
+    );
+    const partialHtml = renderHtmlTemplate(
+      makeRenderInput(baseContent),
+      partial,
+    );
+    expect(full).not.toBe(partialHtml);
+    expect(full.length).toBeGreaterThan(partialHtml.length);
+  });
+
+  it("renders sections in the template declared order, not the canonical order", () => {
+    const reversed: M03Template = {
+      id:      "m03-reversed-test",
+      version: "1.0.0",
+      sections: [
+        { key: "limitations", label: "Limitations" },
+        { key: "context",     label: "Context" },
+        { key: "metadata",    label: "Metadata" },
+      ],
+    };
+    const html = renderHtmlTemplate(makeRenderInput(baseContent), reversed);
+    const limPos  = html.indexOf('class="limitations"');
+    const ctxPos  = html.indexOf('class="context"');
+    const metaPos = html.indexOf('class="metadata"');
+    expect(metaPos).toBeGreaterThan(ctxPos);
+    expect(ctxPos).toBeGreaterThan(limPos);
+  });
+});

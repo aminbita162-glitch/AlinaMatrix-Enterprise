@@ -19,7 +19,11 @@
  *
  * Status: Enterprise Candidate — Active Development
  */
-import type { Watermark, RenderInput } from "@alinamatrix/contracts";
+import type { Watermark, RenderInput, M03Template } from "@alinamatrix/contracts";
+import {
+  M03_DEFAULT_TEMPLATE,
+  resolveTemplateKeys,
+} from "@alinamatrix/domain";
 
 // ============================================================
 // Known M03 content model keys (render oracle)
@@ -212,7 +216,34 @@ function renderSection(key: string, value: unknown): string {
  * @returns       Deterministic HTML string.
  */
 export function renderHtml(input: RenderInput): string {
+  return renderHtmlTemplate(input, M03_DEFAULT_TEMPLATE);
+}
+
+// ============================================================
+// Schema-driven render: renderHtmlTemplate (Phase E)
+// ============================================================
+
+/**
+ * Render the approved M03 content model as a deterministic HTML document,
+ * using a schema-driven template.
+ *
+ * Phase E directive: "Schema-driven M03 template: render only keys declared
+ * by the pinned schema."
+ *
+ * Only keys declared by the template AND present in the pinned M03 schema
+ * (M03_SECTION_ORDER) are rendered, in the template's declared order. Unknown
+ * keys (not in the template) are dropped. Published bytes do not change for
+ * the same input + template.
+ *
+ * @param input     The render input (validated upstream by RenderInputSchema).
+ * @param template  The schema-driven M03 template (declares render keys).
+ * @returns          Deterministic HTML string.
+ */
+export function renderHtmlTemplate(input: RenderInput, template: M03Template): string {
   const { content, watermark } = input;
+
+  // Resolve the render keys: template keys ∩ pinned schema keys, in template order.
+  const renderKeys = resolveTemplateKeys(template, M03_SECTION_ORDER);
 
   const parts: string[] = [];
   parts.push("<!DOCTYPE html>\n");
@@ -226,8 +257,8 @@ export function renderHtml(input: RenderInput): string {
   parts.push("<body>\n");
   parts.push("  <main class=\"m03-artifact\">\n");
 
-  // Render sections in fixed order. Unknown keys are dropped.
-  for (const sectionKey of M03_SECTION_ORDER) {
+  // Render only the template-declared keys (intersected with pinned schema keys).
+  for (const sectionKey of renderKeys) {
     if (!KNOWN_SECTION_KEYS.has(sectionKey)) continue;
     const sectionValue = (content as Record<string, unknown>)[sectionKey];
     if (sectionValue === undefined || sectionValue === null) continue;

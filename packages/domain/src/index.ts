@@ -190,3 +190,15 @@ export {
 export type {
   BuildTraceRecordInput,
 } from "./trace.js";
+
+// Phase E — schema-driven M03 template
+export {
+  M03_DEFAULT_TEMPLATE,
+  M03_SCHEMA_KEYS,
+  resolveTemplateKeys,
+  assertTemplateKeyKnown,
+  filterContentByTemplate,
+  isKeyRenderable,
+  UnknownTemplateKeyError,
+  TemplateInputError,
+} from "./template.js";

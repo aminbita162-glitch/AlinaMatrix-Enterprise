@@ -291,3 +291,14 @@ export {
 export type {
   TraceRecord,
 } from "./trace.js";
+
+// Phase E — schema-driven M03 template
+export {
+  M03TemplateSchema,
+  M03TemplateSectionSchema,
+} from "./template.js";
+
+export type {
+  M03Template,
+  M03TemplateSection,
+} from "./template.js";
