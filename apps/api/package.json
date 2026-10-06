@@ -11,14 +11,18 @@
   },
   "dependencies": {
     "@alinamatrix/contracts": "workspace:*",
+    "@alinamatrix/db": "workspace:*",
+    "@alinamatrix/domain": "workspace:*",
     "@node-rs/argon2": "^2.2.1",
+    "pdf-parse": "^2.4.5",
     "pg": "^8.23.1",
     "uuid": "^14.0.2"
   },
   "devDependencies": {
+    "@types/pdf-parse": "^1.1.5",
     "@types/pg": "^8.11.11",
     "@types/uuid": "^10.0.0",
-    "vitest": "^2.1.0",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.0"
   }
 }

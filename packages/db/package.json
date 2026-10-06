@@ -16,6 +16,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@alinamatrix/domain": "workspace:*",
     "@node-rs/argon2": "^2.2.1",
     "pg": "^8.23.1",
     "uuid": "^14.0.2"
