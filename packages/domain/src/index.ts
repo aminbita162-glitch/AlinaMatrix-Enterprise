@@ -111,3 +111,16 @@ export type {
   ReviewClaimInput,
   ApproverRecord,
 } from "./review.js";
+
+// Phase 9 — release gate and label lifecycle
+export {
+  ReleaseGateError,
+  IllegalLabelError,
+  checkReleaseGate,
+  assertReleaseGate,
+  isLegalLabelTransition,
+  assertLegalLabelTransition,
+} from "./release.js";
+export type {
+  ReleaseLabel,
+} from "./release.js";

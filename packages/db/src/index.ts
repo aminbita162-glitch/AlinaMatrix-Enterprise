@@ -156,3 +156,18 @@ export type {
   InsertApprovalParams,
   InsertCommentParams,
 } from "./review.js";
+
+// Phase 9 — release labels
+export {
+  insertReleaseLabel,
+  getReleaseLabel,
+  getReleaseLabelByArtifact,
+  publishReleaseLabel,
+  updateReleaseLabel,
+} from "./release.js";
+export type {
+  ReleaseLabel,
+  ReleaseLabelRow,
+  InsertReleaseLabelParams,
+  PublishReleaseLabelParams,
+} from "./release.js";

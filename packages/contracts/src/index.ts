@@ -225,3 +225,16 @@ export type {
   PdfStatus,
   PdfResult,
 } from "./render.js";
+
+// Phase 9 — release contracts
+export {
+  ReleaseLabelSchema,
+  ReleaseGateInputSchema,
+  ReleaseGateResultSchema,
+} from "./release.js";
+
+export type {
+  ReleaseLabel,
+  ReleaseGateInput,
+  ReleaseGateResult,
+} from "./release.js";
