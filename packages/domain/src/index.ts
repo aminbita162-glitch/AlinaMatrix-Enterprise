@@ -70,3 +70,13 @@ export type {
   ArchitectPlanVersionPins,
   ArchitectPlanResult,
 } from "./architect.js";
+
+export {
+  runGenerate,
+  assertClaimIdsExist,
+  UnknownClaimError,
+} from "./generate.js";
+export type {
+  GenerateInput,
+  GenerateResult,
+} from "./generate.js";
