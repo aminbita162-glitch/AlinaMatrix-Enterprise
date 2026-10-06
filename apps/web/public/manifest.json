@@ -1,0 +1,19 @@
+{
+  "name": "AlinaMatrix Enterprise",
+  "short_name": "AlinaMatrix",
+  "description": "Turn complex evidence into auditable professional artifacts.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

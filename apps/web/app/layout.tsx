@@ -1,8 +1,26 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import ServiceWorkerRegister from "./ServiceWorkerRegister";
 
 export const metadata: Metadata = {
   title: "AlinaMatrix Enterprise",
   description: "Turn complex evidence into auditable professional artifacts.",
+  manifest: "/manifest.json",
+  applicationName: "AlinaMatrix",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "AlinaMatrix",
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0a0a0f",
 };
 
 const NAV_ITEMS = [
@@ -66,6 +84,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body style={{ margin: 0, fontFamily: "system-ui, sans-serif", background: "#0a0a0f", color: "#e2e8f0" }}>
         <NavBar />
         {children}
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
