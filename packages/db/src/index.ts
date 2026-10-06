@@ -28,3 +28,28 @@ export type {
   EvidenceItemRow,
   VersionStatus,
 } from "./sources.js";
+
+export {
+  insertClaim,
+  getClaim,
+  listClaimsByProject,
+  updateClaimStatus,
+  insertCitation,
+  getCitation,
+  listCitationsByClaim,
+  insertAssumption,
+  listAssumptions,
+  insertTerminologyEntry,
+  getTerminologyEntry,
+  listTerminology,
+  insertClaimEdge,
+  getClaimEdges,
+  getClaimEdgesByProject,
+} from "./claims.js";
+export type {
+  ClaimRow,
+  CitationRow,
+  AssumptionRow,
+  TerminologyEntryRow,
+  ClaimEdgeRow,
+} from "./claims.js";
