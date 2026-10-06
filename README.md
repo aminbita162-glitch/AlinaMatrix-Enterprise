@@ -202,17 +202,45 @@ Phase reports list actual exit codes, actual test counts, and any failures witho
 
 ## Known Limitations
 
-- **Beachhead not yet proven.** M03 pipeline is scaffolded in Phase 1; end-to-end execution
-  requires Phases 2–10. No production claim is made.
-- **No database.** PostgreSQL, RLS, and tenant isolation are not implemented in Phase 1.
-- **No authentication.** Session management, argon2id, and cookie handling are deferred to Phase 2.
-- **No agent runtime.** All four agents are defined but not executable until Phase 5.
-- **No live LLM.** DeterministicFakeProvider is used throughout; no real model call is made.
+- **Beachhead not yet proven.** M03 pipeline is scaffolded; end-to-end execution
+  requires a live PostgreSQL instance. No production claim is made.
+- **Integration tests skipped.** 101 integration tests require a live PostgreSQL
+  instance with `DATABASE_URL` and `SUPERUSER_URL` set. They are skipped — not
+  failed, not passed.
+- **No PDF output.** PDF rendering is not built — no local pinned offline renderer
+  is available. `renderPdf()` returns `status: "not_built"` with a visible English
+  reason. No fake PDF bytes are emitted.
+- **No live LLM.** All agent outputs use DeterministicFakeProvider (R07). No real
+  model call has been made. Determinism is structural, not semantic.
+- **Security coverage is unit-level.** Auth bypass, authz bypass, tenant breach,
+  prompt injection, bad upload, XSS, and SQL injection are covered by unit tests
+  with mock doubles — not by live integration tests.
+- **No regional disaster recovery.** No DR site, no cross-region replication. The
+  backup runbook (`docs/runbooks/backup-restore.md`) and drill script
+  (`scripts/backup-drill.sh`) are local procedures only.
 - **Local object storage only.** A production object storage backend is not included.
-- **M03 ADR only.** No other document type is produced. Modules M01–M02 and M04–M30 are deferred.
+- **M03 ADR only.** No other document type is produced. Modules M01–M02 and M04–M30
+  are deferred.
 - **All twelve threat-model items are open.** See `docs/security/threat-model-v0.md`.
-- **No PDF output.** PDF rendering is added only if a local pinned renderer works offline (Phase 8).
-- **No regional disaster recovery, billing, audio engine, or regulated autonomy.** All deferred.
+
+## Claims Audit (Phase 10)
+
+Every claim in this README is audited against evidence in the repository.
+
+| Claim | Evidence | Status |
+|-------|---------|--------|
+| "Enterprise Candidate — Active Development" | Status line in DIRECTIV.txt H02; all phase reports; README header | Verified |
+| "Turn complex evidence into auditable professional artifacts." | Product sentence in DIRECTIV.txt FROZEN DECISIONS; `packages/contracts/src/m03.ts` M03MetadataSchema | Verified |
+| Four agents: AlinaArchitect, AlinaGuard, AlinaDocEngine, AlinaOptimizer | `packages/domain/src/agents.ts` AGENT_CAPABILITIES; `packages/domain/src/agents.test.ts` — exactly four agents | Verified |
+| No live LLM (DeterministicFakeProvider) | `packages/domain/src/agents.ts` DeterministicFakeProvider; `packages/domain/src/agents.test.ts` — no I/O | Verified |
+| No production-ready claim | No "production-ready" string in any file; H01 forbids it | Verified |
+| PDF not built | `packages/renderer/src/pdf.ts` — `renderPdf()` returns `status: "not_built"` | Verified |
+| Integration tests skipped | `packages/db/src/*.integration.test.ts` — skipped without DATABASE_URL | Verified |
+| Beachhead is M03 only | `docs/adr/ADR-0001-beachhead-m03.md`; DIRECTIV.txt FROZEN DECISIONS | Verified |
+| No invented DOI/PMID/ISBN | No DOI/PMID/ISBN fields in any schema; DIRECTIV.txt H06 forbids it | Verified |
+| Backup drill script exists | `scripts/backup-drill.sh` | Verified |
+| Release scorecard exists | `docs/release/scorecard.md` | Verified |
+| Expert acceptance protocol exists | `docs/eval/expert-acceptance-protocol.md` (blank scores) | Verified |
 
 ---
 
@@ -220,16 +248,16 @@ Phase reports list actual exit codes, actual test counts, and any failures witho
 
 | Phase | Name | Status |
 |---|---|---|
-| 1 | Repository Contract and Cinematic README | In progress |
-| 2 | Identity, Tenancy, RLS, Audit | Pending |
-| 3 | Immutable Source and Fragments | Pending |
-| 4 | Claim Atoms and Provenance | Pending |
-| 5 | Jobs, Four Agent Contracts, Fake Provider | Pending |
-| 6 | M03 Architect, Generate, Guard | Pending |
-| 7 | Human Review | Pending |
-| 8 | Renderer and Build Manifest | Pending |
-| 9 | Release Gate, Export, Budget | Pending |
-| 10 | Evaluation Evidence and Honest Scorecard | Pending |
+| 1 | Repository Contract and Cinematic README | Complete |
+| 2 | Identity, Tenancy, RLS, Audit | Complete |
+| 3 | Immutable Source and Fragments | Complete |
+| 4 | Claim Atoms and Provenance | Complete |
+| 5 | Jobs, Four Agent Contracts, Fake Provider | Complete |
+| 6 | M03 Architect, Generate, Guard | Complete |
+| 7 | Human Review | Complete |
+| 8 | Renderer and Build Manifest | Complete |
+| 9 | Release Gate, Export, Budget | Complete |
+| 10 | Evaluation Evidence and Honest Scorecard | Complete |
 
 ---
 
