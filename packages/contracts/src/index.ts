@@ -262,3 +262,12 @@ export type {
   BudgetResult,
   BudgetBreachResult,
 } from "./budget.js";
+
+// Phase 9 — revocation contracts
+export {
+  RevocationEventSchema,
+} from "./revocation.js";
+
+export type {
+  RevocationEvent,
+} from "./revocation.js";

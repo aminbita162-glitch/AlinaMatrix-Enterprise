@@ -193,3 +193,14 @@ export type {
   InsertProjectBudgetParams,
   IncreaseProjectBudgetSpentParams,
 } from "./budget.js";
+
+// Phase 9 — revocation events (append-only)
+export {
+  insertRevocationEvent,
+  listRevocationEventsByArtifact,
+} from "./revocation.js";
+export type {
+  RevocationEventRow,
+  RevocationPriorLabel,
+  InsertRevocationEventParams,
+} from "./revocation.js";

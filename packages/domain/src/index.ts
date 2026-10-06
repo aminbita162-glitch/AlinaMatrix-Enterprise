@@ -144,3 +144,12 @@ export {
   checkBudget,
   BudgetBreaker,
 } from "./budget.js";
+
+// Phase 9 — revocation
+export {
+  revokeRelease,
+  RevocationInputError,
+} from "./revocation.js";
+export type {
+  RevokeReleaseInput,
+} from "./revocation.js";
