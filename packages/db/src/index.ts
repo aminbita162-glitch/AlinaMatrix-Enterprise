@@ -118,6 +118,21 @@ export type {
 } from "./m03.js";
 
 export {
+  insertRenderedArtifact,
+  getRenderedArtifact,
+  getRenderedArtifactByBuild,
+  listRenderedArtifactsByRun,
+  insertBuildManifest,
+  getBuildManifest,
+} from "./render.js";
+export type {
+  RenderedArtifactRow,
+  BuildManifestRow,
+  InsertRenderedArtifactParams,
+  InsertBuildManifestParams,
+} from "./render.js";
+
+export {
   insertReviewTask,
   getReviewTask,
   getReviewTaskByRun,
