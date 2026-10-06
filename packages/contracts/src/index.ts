@@ -1,3 +1,20 @@
-// Phase 1 stub — API contracts (zod schemas) will be added in Phase 2+
-// Status: Enterprise Candidate — Active Development
-export {};
+/**
+ * packages/contracts — public API
+ * Status: Enterprise Candidate — Active Development
+ */
+
+export {
+  LoginRequestSchema,
+  LoginResponseSchema,
+  SessionSchema,
+  TenantSchema,
+  ApiErrorSchema,
+} from "./auth.js";
+
+export type {
+  LoginRequest,
+  LoginResponse,
+  Session,
+  Tenant,
+  ApiError,
+} from "./auth.js";

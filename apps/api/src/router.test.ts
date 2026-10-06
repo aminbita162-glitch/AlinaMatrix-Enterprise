@@ -4,9 +4,10 @@ import type { Server } from "node:http";
 import { router } from "../src/router.js";
 import type { HealthResponse } from "../src/router.js";
 
+// router() with no db — health works, auth routes return 503
 function startTestServer(): Promise<{ server: Server; port: number }> {
   return new Promise((resolve, reject) => {
-    const server = createServer(router);
+    const server = createServer(router());
     server.listen(0, "127.0.0.1", () => {
       const addr = server.address();
       if (!addr || typeof addr === "string") {
