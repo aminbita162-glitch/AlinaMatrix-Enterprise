@@ -200,6 +200,24 @@ Phase reports list actual exit codes, actual test counts, and any failures witho
 
 ---
 
+## Links
+
+| Resource | Path |
+|----------|------|
+| Repository root | [GitHub — AlinaMatrix-Enterprise](https://github.com/aminbita162-glitch/AlinaMatrix-Enterprise) |
+| Phase reports | [`docs/phases/`](docs/phases/) — `phase-1-report.md` through `phase-10-report.md` |
+| Release scorecard | [`docs/release/scorecard.md`](docs/release/scorecard.md) |
+| Expert acceptance protocol | [`docs/eval/expert-acceptance-protocol.md`](docs/eval/expert-acceptance-protocol.md) |
+| Test home | [`docs/testing/test-home.md`](docs/testing/test-home.md) |
+| API docs (Swagger UI) | `/docs` (served by `apps/api` at runtime) |
+| OpenAPI 3.1 spec | `/openapi.json` (served by `apps/api` at runtime) |
+| 30-second demo | [`scripts/demo.sh`](scripts/demo.sh) |
+
+> No invented live URL is listed. The `/docs` and `/openapi.json` paths are
+> served by the API server at runtime — they are not browseable on GitHub.
+
+---
+
 ## Known Limitations
 
 - **Beachhead not yet proven.** M03 pipeline is scaffolded; end-to-end execution
