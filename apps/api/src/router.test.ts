@@ -82,6 +82,39 @@ describe("GET /health", () => {
   });
 });
 
+describe("GET /openapi.json and GET /docs", () => {
+  it("serves OpenAPI 3.1 spec at /openapi.json", async () => {
+    const { server, port } = await startTestServer();
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/openapi.json`);
+      expect(res.status).toBe(200);
+      expect(res.headers.get("content-type")).toContain("application/json");
+      const body = (await res.json()) as { openapi: string; paths: Record<string, unknown> };
+      expect(body.openapi).toBe("3.1.0");
+      expect(body.paths).toBeDefined();
+      // Existing routes only — health is always present
+      expect(body.paths["/health"]).toBeDefined();
+    } finally {
+      await stopServer(server);
+    }
+  });
+
+  it("serves Swagger UI at /docs", async () => {
+    const { server, port } = await startTestServer();
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/docs`);
+      expect(res.status).toBe(200);
+      expect(res.headers.get("content-type")).toContain("text/html");
+      const text = await res.text();
+      expect(text).toContain("swagger-ui");
+      expect(text).toContain("/openapi.json");
+      expect(text).toContain("Enterprise Candidate");
+    } finally {
+      await stopServer(server);
+    }
+  });
+});
+
 describe("GET /auth/me", () => {
   it("returns 401 without a session cookie", async () => {
     const { server, port } = await startWithAuth(VALID_SESSION);

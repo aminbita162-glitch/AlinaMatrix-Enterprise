@@ -25,6 +25,7 @@ import {
   handleClaimDecision,
 } from "./review.js";
 import type { ReviewDb } from "./review.js";
+import { OPENAPI_DOCUMENT, SWAGGER_UI_HTML } from "./openapi.js";
 
 export interface HealthResponse {
   status: "ok";
@@ -297,6 +298,18 @@ export function router(deps: RouterDeps | AuthDb = {}) {
 
     if (method === "GET" && url === "/health") {
       handleHealth(req, res);
+      return;
+    }
+
+    // OpenAPI 3.1 spec (existing routes only) and Swagger UI.
+    if (method === "GET" && url === "/openapi.json") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(OPENAPI_DOCUMENT));
+      return;
+    }
+    if (method === "GET" && url === "/docs") {
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(SWAGGER_UI_HTML);
       return;
     }
 
