@@ -22,7 +22,7 @@ production.
 
 | # | Blocker | Status | Evidence |
 |---|---------|--------|----------|
-| C1 | Integration tests not exercised | Open | 101 integration tests skipped without `DATABASE_URL`; RLS, immutability triggers, and CHECK constraints are structurally verified but not executed against a live PostgreSQL instance |
+| C1 | Integration tests not exercised | **Closed** | 101 integration tests run against PostgreSQL 16 with `DATABASE_URL` and `SUPERUSER_URL` set; migrations 001–014 applied; all 101 passed (14 RLS, 28 sources, 35 claims, 24 agents). Evidence: `docs/phases/release-1-report.md` |
 | C2 | PDF not built | **Closed** | Phase B pinned `pdfkit@0.20.2` (pure-JS, no native deps, no network). `renderPdf()` is async and emits real `%PDF-` bytes with the watermark + status line as visible text and in the info dictionary (`Title`, `Subject`, `Keywords`). `packages/renderer/src/pdf.test.ts` (13 tests) verifies: status is `"built"`, bytes start with `%PDF-`, `bytes` is a non-empty `Uint8Array`, `sha256` is a 64-char hex string, sha256 is deterministic (same inputs → same sha256), watermark + status line are embedded, unknown assertion keys are dropped, and `PdfNotAvailableError` is a proper `Error`. `computePdfContentSha256` is the sync variant for the content hash |
 | C3 | No live LLM verification | Open | All agent outputs use `DeterministicFakeProvider` (R07); determinism is structural, not semantic — no real model call has been made |
 | C4 | Security coverage is unit-level only | Open | Auth bypass, authz bypass, tenant breach, prompt injection, bad upload, XSS, and SQL injection are covered by unit tests with mock doubles — not by live integration tests |
@@ -111,9 +111,9 @@ production.
 
 ## Pre-launch blockers (must be closed before production)
 
-1. **Run integration tests against a live PostgreSQL instance.** All 101
-   skipped integration tests must pass with `DATABASE_URL` and
-   `SUPERUSER_URL` set and migrations 001–014 applied.
+1. ~~**Run integration tests against a live PostgreSQL instance.**~~ **Closed
+   (R1).** All 101 integration tests passed with `DATABASE_URL` and
+   `SUPERUSER_URL` set and migrations 001–014 applied against PostgreSQL 16.
 
 2. **Verify with a live LLM.** DeterministicFakeProvider must be replaced
    with a real model call, and the determinism invariants (same inputs →
