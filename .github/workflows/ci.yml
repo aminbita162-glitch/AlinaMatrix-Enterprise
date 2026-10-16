@@ -11,6 +11,25 @@ jobs:
     name: Typecheck, Test, Lint
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: alinamatrix
+          POSTGRES_PASSWORD: alinamatrix_dev
+          POSTGRES_DB: alinamatrix
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U alinamatrix"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      SUPERUSER_URL: postgres://alinamatrix:alinamatrix_dev@localhost:5432/alinamatrix
+      DATABASE_URL: postgres://app_user:app_user_dev@localhost:5432/alinamatrix
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,6 +58,12 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Initialise database roles
+        run: psql "$SUPERUSER_URL" -f scripts/ci-db-init.sql
+
+      - name: Apply migrations and seed
+        run: node scripts/ci-migrate.mjs
 
       - name: Typecheck
         run: pnpm typecheck
