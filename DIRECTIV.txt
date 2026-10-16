@@ -1,80 +1,71 @@
 ================================================================
-ALINAMATRIX ENTERPRISE — FOLLOW-ON
+ALINAMATRIX ENTERPRISE — RELEASE ORDER
 STATUS: ENTERPRISE CANDIDATE / ACTIVE DEVELOPMENT
 ================================================================
 
 This file is the only implementation order. Execute only the phase named
 in the operator's latest short instruction. If no phase is named, stop.
 At the end of a phase, stop. Do not start the next phase. Do not add a
-phase after F. Do not push. Commit each finished unit separately:
-"follow-on-<letter>: <unit> - gate passed". Do not use one phase-sized
-commit. Do not name an agent product.
+phase after R6. Do not push. Commit each finished unit separately:
+"release-<n>: <unit> - gate passed". Do not name an agent product.
 
-English only: source, comments, docs, UI, tests, commits, logs.
-Allowed status line, exact: "Enterprise Candidate — Active Development".
+English only. Allowed status line, exact:
+"Enterprise Candidate — Active Development".
 Never claim production, enterprise-shipped, compliant, zero-defect, or
 zero-hallucination. A skipped test is not passed. A failed test is failed.
 Do not invent citations, scores, customers, credentials, or URLs.
-Do not weaken a test. Do not call a live LLM. Use DeterministicFakeProvider.
+Do not weaken a test. Do not log secrets, raw documents, or full prompts.
+Do not delete Phase 1–10 or follow-on A–F evidence.
 Do not accept client-supplied tenant_id as the isolation authority.
-Do not log secrets, raw documents, or full prompts.
-Do not delete Phase 1–10 evidence. Do not add a feature not named here.
-Material decisions not frozen here require an ADR and a stop.
-Host is Render: web, api, Postgres. Beachhead remains M03.
+Beachhead remains M03. Host is Render: web, api, Postgres.
+The enterprise whistle stays closed while C1, C3, C4, or the backup
+drill is open.
 
-PHASE A — CONTROL HARDENING
+R1 — LIVE POSTGRES IN CI
 ----------------------------------------------------------------
-Watermark intact requires the four renderer meta tags, not a bare
-substring. Review UI sends the authenticated session user id; remove
-hardcoded reviewer id 00000000-0000-4000-8000-000000000001.
-OpenAPI 3.1 for existing routes only. Swagger UI at /docs.
-docs/testing/test-home.md lists executed tests and skipped live tests.
-Root 30-second English demo runs the golden suite and prints the status
-line plus open limitations. README link package: repository, phase
-reports, scorecard, protocol, test home, /docs. No invented live URL.
+Apply migrations 001–014 to PostgreSQL 16. Set DATABASE_URL and
+SUPERUSER_URL in CI. Run all 101 previously skipped integration tests.
+All must pass. Do not skip them. Record counts in
+docs/phases/release-1-report.md. Update scorecard C1 only if they pass.
 Gate: pnpm typecheck, pnpm test, pnpm lint exit 0. Stop.
 
-PHASE B — RUNNABLE BEACHHEAD AND PDF
+R2 — RENDER DEPLOY
 ----------------------------------------------------------------
-One operator path from an approved M03 content model to HTML and
-manifest through the fake provider. Same inputs, same HTML sha256.
-Add one pinned offline PDF library. Emit real PDF bytes from that HTML.
-No remote PDF service. No fake bytes. If it cannot be pinned, keep
-"not_built" and record the blocker. Watermark and status line are in
-the PDF. Unknown assertion keys stay dropped. No invented claim.
-Gate: pnpm typecheck, pnpm test, pnpm lint exit 0. Stop.
+Apply render.yaml. Run migrations before the API serves traffic.
+Inject DATABASE_URL into the db layer. Auth must not stay 503 once the
+database is connected. Record the real web, api, and /docs URLs in the
+README link package. No invented URL. If deploy cannot run here, write
+the exact blocker and stop. Label, exact:
+"Render candidate — not production". Gate exit 0. Stop.
 
-PHASE C — PHONE TEST SURFACE
+R3 — PINNED LIVE MODEL
 ----------------------------------------------------------------
-PWA manifest and service worker for apps/web. Add to Home Screen opens
-the existing web app. Status line visible.
-docs/testing/phone-install.md for iOS Safari and Android Chrome.
-Gate exit 0. Stop.
+Add one pinned model provider beside DeterministicFakeProvider.
+Pin model id, temperature, schema version, and budget ceiling.
+Same input must validate against the schema. Do not claim the same
+sha256 as the fake provider. Unknown keys stay dropped. No invented
+claim. Prompt-injection fixture must not change the plan. Record
+semantic variance. Do not call the model if over budget. Gate exit 0.
+Stop.
 
-PHASE D — PROVENANCE AND TRACE
+R4 — LIVE SECURITY TESTS
 ----------------------------------------------------------------
-Merkle provenance ledger over source version, content hash, manifest,
-and html sha256. Artifact time-travel diff between two stored builds.
-Code-to-document trace from a cited path to the claim and the rendered
-section. Append-only. Tenant isolated. Tests for tamper detection,
-deterministic diff, and missing-trace rejection. Gate exit 0. Stop.
+Against the deployed service: bad login, cross-tenant read, bad upload,
+rendered XSS. Record pass or fail. Do not close a threat-model item
+without a recorded live result. Update scorecard C4 only for a check
+this run closed. Gate exit 0. Stop.
 
-PHASE E — TEMPLATES AND CONSENSUS
+R5 — BACKUP DRILL
 ----------------------------------------------------------------
-Schema-driven M03 template: render only keys declared by the pinned
-schema. Multi-party consensus review: N named approvers, threshold,
-no self-approval, decision event append-only. Published bytes do not
-change. Tests for unknown key dropped, threshold not met, and
-self-approval rejected. Gate exit 0. Stop.
+Run scripts/backup-drill.sh against the live database. Dump, restore,
+read the same tenant. Record the result in docs/runbooks/backup-restore.md.
+Do not claim regional disaster recovery. Gate exit 0. Stop.
 
-PHASE F — RENDER CANDIDATE
+R6 — README TRUTH
 ----------------------------------------------------------------
-Render blueprint: web, api, Postgres. Secrets from the host environment.
-Do not commit secrets. If deploy cannot run here, write the blueprint
-and stop. Do not invent URLs. If deploy runs, record web, api, and
-/docs URLs in the README link package.
-Label, exact: "Render candidate — not production".
-Update docs/release/scorecard.md only for a check a recorded test
-closed. Leave every other blocker open. Gate exit 0. Stop.
-Do not add Phase G.
+Remove the stale "PDF not built" lines. Claims audit must match
+packages/renderer/src/pdf.ts. Add a short English lead box at the top:
+what the system is, what it does, what problem it solves, current scale,
+and open limits. About 30–40 seconds to read. Status line stays exact.
+No production claim. Gate exit 0. Stop. Do not add R7.
 ================================================================
