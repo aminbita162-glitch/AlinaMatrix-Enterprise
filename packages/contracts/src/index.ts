@@ -320,6 +320,23 @@ export type {
   ConsensusState,
 } from "./consensus.js";
 
+// Phase E — reviewer diff between two builds
+export {
+  ReviewerDiffSnapshotSchema,
+  ReviewerDiffFieldSchema,
+  ReviewerDiffKindSchema,
+  ReviewerDiffEntrySchema,
+  ReviewerDiffResultSchema,
+} from "./reviewer-diff.js";
+
+export type {
+  ReviewerDiffSnapshot,
+  ReviewerDiffField,
+  ReviewerDiffKind,
+  ReviewerDiffEntry,
+  ReviewerDiffResult,
+} from "./reviewer-diff.js";
+
 // Level Up Phase D — assumption register (evidence depth)
 export {
   AssumptionRegisterEntrySchema,

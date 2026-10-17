@@ -218,6 +218,15 @@ export {
   ConsensusInputError,
 } from "./consensus.js";
 
+// Phase E — reviewer diff between two builds
+export {
+  buildReviewerDiff,
+  ReviewerDiffInputError,
+} from "./reviewer-diff.js";
+export type {
+  BuildReviewerDiffInput,
+} from "./reviewer-diff.js";
+
 // Level Up Phase D — assumption register (evidence depth)
 export {
   AssumptionRegisterError,
