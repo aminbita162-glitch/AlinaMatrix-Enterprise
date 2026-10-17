@@ -7,6 +7,34 @@
 
 ---
 
+## Author Box
+
+| Field | Value |
+|---|---|
+| Name | Amin Azimi |
+| Role | AI Architect |
+| Focus | End-to-End System Development and Business Challenge Architecture |
+| Innovation Lab | Azimi Innovation Lab |
+| Version | 1.0.0 |
+| Date | October 2026 |
+
+AlinaMatrix Enterprise is a multi-tenant AI document-engineering and evidence-control
+platform. It is not a chatbot, a search engine, or a general-purpose LLM wrapper. It
+turns complex source evidence into auditable professional artifacts through a controlled
+pipeline of four agents, human review, four-eyes approval, Merkle provenance, and a
+release gate. The problem it solves: expert users need structured synthesis with provable
+provenance, reproducible rendering, tenant isolation, and controlled review — not
+freeform LLM output.
+
+The beachhead is M03 only. The project is a Candidate until real deployment and real
+use. A small test count is not proof of real-world capacity. The PDF renderer emits
+real bytes. No live model call has been recorded. There is no regional disaster
+recovery. This is not production. The status line stays exact: **Enterprise Candidate
+— Active Development**.
+
+
+---
+
 > **Lead box (30-second read)**
 >
 > **What it is:** A multi-tenant AI document-engineering and evidence-control platform:
@@ -181,6 +209,41 @@ AlinaGuard validates evidence, quote-locks, and checks for contradictions.
 AlinaDocEngine compiles the approved content model into a rendered artifact.
 AlinaOptimizer reads usage data and manages cache metadata.
 Human review and a four-eyes release gate are required before any artifact is published.
+
+---
+
+## Mission Blueprint
+
+<p align="center">
+<img src="docs/assets/readme/hero.svg" alt="AlinaMatrix Enterprise — evidence-to-artifact mission flow" width="960" />
+</p>
+
+<p align="center">
+<img src="docs/assets/readme/blueprint-architecture.svg" alt="AlinaMatrix Enterprise system architecture blueprint" width="960" />
+</p>
+
+### Stations (2×2 grid)
+
+<p align="center">
+<img src="docs/assets/readme/station-01-architect.svg" alt="ST-01 AlinaArchitect" width="400" />
+<img src="docs/assets/readme/station-02-guard.svg" alt="ST-02 AlinaGuard" width="400" />
+</p>
+
+<p align="center">
+<img src="docs/assets/readme/station-03-docengine.svg" alt="ST-03 AlinaDocEngine" width="400" />
+<img src="docs/assets/readme/station-04-optimizer.svg" alt="ST-04 AlinaOptimizer" width="400" />
+</p>
+
+### Handoff Flow
+
+<p align="center">
+<img src="docs/assets/readme/handoff-flow.svg" alt="Station handoff flow — four agents in sequence" width="960" />
+</p>
+
+<p align="center">
+<img src="docs/assets/readme/divider.svg" alt="section divider" width="960" />
+</p>
+
 
 ---
 
