@@ -26,7 +26,7 @@ production.
 | C2 | PDF not built | **Closed** | Phase B pinned `pdfkit@0.20.2` (pure-JS, no native deps, no network). `renderPdf()` is async and emits real `%PDF-` bytes with the watermark + status line as visible text and in the info dictionary (`Title`, `Subject`, `Keywords`). `packages/renderer/src/pdf.test.ts` (13 tests) verifies: status is `"built"`, bytes start with `%PDF-`, `bytes` is a non-empty `Uint8Array`, `sha256` is a 64-char hex string, sha256 is deterministic (same inputs → same sha256), watermark + status line are embedded, unknown assertion keys are dropped, and `PdfNotAvailableError` is a proper `Error`. `computePdfContentSha256` is the sync variant for the content hash |
 | C3 | No live LLM verification | Open | All agent outputs use `DeterministicFakeProvider` (R07); determinism is structural, not semantic — no real model call has been made |
 | C4 | Security coverage is unit-level only | Open | Auth bypass, authz bypass, tenant breach, prompt injection, bad upload, XSS, and SQL injection are covered by unit tests with mock doubles — not by live integration tests |
-| C5 | No regional disaster recovery | Open | No DR site, no cross-region replication, no backup restore drill against a live database |
+| C5 | No regional disaster recovery | Open | The R5 backup drill (dump → restore → tenant read) passed against a live PostgreSQL 16 Docker container (`scripts/backup-drill.sh`, exit 0; evidence in `docs/runbooks/backup-restore.md`), but no DR site, no cross-region replication, and no point-in-time recovery exist. Regional disaster recovery is not claimed |
 
 ## Security coverage (from tests)
 
@@ -119,9 +119,14 @@ production.
    with a real model call, and the determinism invariants (same inputs →
    same plan hash) must be re-verified.
 
-3. **Set up backup and restore drill.** `scripts/backup-drill.sh` exists
-   but has not been run against a live database. See
-   `docs/runbooks/backup-restore.md`.
+3. **Set up backup and restore drill.** ~~`scripts/backup-drill.sh` exists
+   but has not been run against a live database.~~ **Closed (R5).** The
+   drill was run against a live PostgreSQL 16 Docker container: dump
+   (`pg_dump -F c`), restore into a fresh database (`pg_restore
+   --no-owner --clean --if-exists`), and read of the same tenant row from
+   both live and restored databases (exact match). Exit 0. Evidence:
+   `docs/runbooks/backup-restore.md`. Regional disaster recovery remains
+   out of scope — no DR site, no cross-region replication.
 
 4. **Security penetration testing.** Unit tests with mock doubles are not
    a substitute for penetration testing against a live deployment.
