@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" width="960" height="360" role="img" aria-label="AlinaMatrix Enterprise — evidence-to-artifact mission flow">
+  <defs>
+    <style>
+      .bg-deep   { fill: #0A0F1A; }
+      .bg-panel  { fill: #0F1726; }
+      .bg-raise  { fill: #14203A; }
+      .grid-minor { stroke: #12304F; stroke-width: 0.5; fill: none; }
+      .grid-major { stroke: #1B4B7A; stroke-width: 0.8; fill: none; }
+      .line-primary { stroke: #3FA9F5; stroke-width: 1.5; fill: none; }
+      .line-soft    { stroke: #2A6FA8; stroke-width: 1; fill: none; }
+      .text-primary { font-family: ui-monospace, "SF Mono", monospace; fill: #E6EDF3; }
+      .text-muted   { font-family: ui-monospace, "SF Mono", monospace; fill: #8B9BB0; }
+      .text-faint    { font-family: ui-monospace, "SF Mono", monospace; fill: #5B6B80; }
+
+      @keyframes hero-pulse { 0%,100%{opacity:.30} 50%{opacity:1} }
+      .hero-pulse { animation: hero-pulse 3s ease-in-out infinite; }
+
+      @keyframes hero-travel {
+        0%   { transform: translateX(60px);  opacity: 0; }
+        8%   { opacity: 1; }
+        92%  { opacity: 1; }
+        100% { transform: translateX(840px); opacity: 0; }
+      }
+      .hero-travel { animation: hero-travel 4s linear infinite; }
+
+      @keyframes hero-glow1 { 0%,100%{stroke:#3FA9F5;stroke-opacity:.30} 25%{stroke:#3FA9F5;stroke-opacity:1} }
+      @keyframes hero-glow2 { 0%,100%{stroke:#2A6FA8;stroke-opacity:.30} 50%{stroke:#2A6FA8;stroke-opacity:1} }
+      @keyframes hero-glow3 { 0%,100%{stroke:#5EEAD4;stroke-opacity:.30} 75%{stroke:#5EEAD4;stroke-opacity:1} }
+      .glow1 { animation: hero-glow1 4s ease-in-out infinite; }
+      .glow2 { animation: hero-glow2 4s ease-in-out infinite; }
+      .glow3 { animation: hero-glow3 4s ease-in-out infinite; }
+
+      @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+    </style>
+  </defs>
+
+  <rect class="bg-deep" width="960" height="360"/>
+
+  <!-- grid -->
+  <g>
+    <line class="grid-minor" x1="0" y1="60"  x2="960" y2="60"/>
+    <line class="grid-minor" x1="0" y1="120" x2="960" y2="120"/>
+    <line class="grid-minor" x1="0" y1="180" x2="960" y2="180"/>
+    <line class="grid-minor" x1="0" y1="240" x2="960" y2="240"/>
+    <line class="grid-minor" x1="0" y1="300" x2="960" y2="300"/>
+    <line class="grid-major" x1="0" y1="180" x2="960" y2="180"/>
+  </g>
+
+  <!-- source -->
+  <rect class="bg-raise" x="20" y="150" width="80" height="60" rx="6"/>
+  <text class="text-primary" x="60" y="178" font-size="11" text-anchor="middle">SOURCE</text>
+  <text class="text-faint" x="60" y="194" font-size="9" text-anchor="middle">evidence</text>
+
+  <!-- ST-01 -->
+  <rect class="bg-raise glow1" x="150" y="140" width="110" height="80" rx="6"/>
+  <text class="text-primary" x="205" y="168" font-size="11" text-anchor="middle">ST-01</text>
+  <text class="text-primary" x="205" y="184" font-size="12" font-weight="bold" text-anchor="middle">AlinaArchitect</text>
+  <text class="text-muted" x="205" y="200" font-size="9" text-anchor="middle">READ_SOURCE</text>
+  <text class="text-muted" x="205" y="212" font-size="9" text-anchor="middle">WRITE_DRAFT</text>
+
+  <!-- ST-02 -->
+  <rect class="bg-raise glow2" x="350" y="140" width="110" height="80" rx="6"/>
+  <text class="text-primary" x="405" y="168" font-size="11" text-anchor="middle">ST-02</text>
+  <text class="text-primary" x="405" y="184" font-size="12" font-weight="bold" text-anchor="middle">AlinaGuard</text>
+  <text class="text-muted" x="405" y="200" font-size="9" text-anchor="middle">RUN_VALIDATION</text>
+  <text class="text-muted" x="405" y="212" font-size="9" text-anchor="middle">QUOTE_LOCK</text>
+
+  <!-- ST-03 -->
+  <rect class="bg-raise glow3" x="550" y="140" width="110" height="80" rx="6"/>
+  <text class="text-primary" x="605" y="168" font-size="11" text-anchor="middle">ST-03</text>
+  <text class="text-primary" x="605" y="184" font-size="12" font-weight="bold" text-anchor="middle">AlinaDocEngine</text>
+  <text class="text-muted" x="605" y="200" font-size="9" text-anchor="middle">COMPILE</text>
+  <text class="text-muted" x="605" y="212" font-size="9" text-anchor="middle">ARTIFACT</text>
+
+  <!-- ST-04 -->
+  <rect class="bg-raise hero-pulse" x="720" y="140" width="110" height="80" rx="6"/>
+  <text class="text-primary" x="775" y="168" font-size="11" text-anchor="middle">ST-04</text>
+  <text class="text-primary" x="775" y="184" font-size="12" font-weight="bold" text-anchor="middle">AlinaOptimizer</text>
+  <text class="text-muted" x="775" y="200" font-size="9" text-anchor="middle">READ_USAGE</text>
+  <text class="text-muted" x="775" y="212" font-size="9" text-anchor="middle">WRITE_CACHE</text>
+
+  <!-- artifact -->
+  <rect class="bg-raise" x="870" y="150" width="70" height="60" rx="6"/>
+  <text class="text-primary" x="905" y="178" font-size="11" text-anchor="middle">ARTIFACT</text>
+  <text class="text-faint" x="905" y="194" font-size="9" text-anchor="middle">auditable</text>
+
+  <!-- connectors -->
+  <line class="line-primary" x1="100" y1="180" x2="150" y2="180"/>
+  <line class="line-soft" x1="260" y1="180" x2="350" y2="180"/>
+  <line class="line-primary" x1="460" y1="180" x2="550" y2="180"/>
+  <line class="line-soft" x1="660" y1="180" x2="720" y2="180"/>
+  <line class="line-primary" x1="830" y1="180" x2="870" y2="180"/>
+
+  <!-- travelling evidence token -->
+  <g class="hero-travel">
+    <circle cx="0" cy="180" r="5" fill="#5EEAD4" opacity="0.9"/>
+    <circle cx="0" cy="180" r="9" fill="none" stroke="#5EEAD4" stroke-width="0.8" opacity="0.4"/>
+  </g>
+
+  <!-- labels -->
+  <text class="text-muted" x="125" y="170" font-size="8" text-anchor="middle">plan</text>
+  <text class="text-muted" x="305" y="170" font-size="8" text-anchor="middle">validate</text>
+  <text class="text-muted" x="505" y="170" font-size="8" text-anchor="middle">compile</text>
+  <text class="text-muted" x="690" y="170" font-size="8" text-anchor="middle">optimize</text>
+  <text class="text-muted" x="850" y="170" font-size="8" text-anchor="middle">release</text>
+
+  <!-- caption -->
+  <text class="text-faint" x="480" y="290" font-size="10" text-anchor="middle">Evidence flows left to right. Human review and release gate sit between AlinaGuard and AlinaDocEngine.</text>
+  <text class="text-faint" x="480" y="310" font-size="10" text-anchor="middle">AlinaOptimizer observes usage and maintains cache metadata. PDF emits real bytes.</text>
+</svg>

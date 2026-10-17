@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 24" width="960" height="24" role="img" aria-label="section divider">
+  <defs>
+    <style>
+      @keyframes div-sweep { 0%{transform:translateX(-100px);opacity:0} 10%{opacity:.6} 90%{opacity:.6} 100%{transform:translateX(1060px);opacity:0} }
+      .div-sweep { animation: div-sweep 4s ease-in-out infinite; }
+      @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+    </style>
+  </defs>
+  <rect fill="#0A0F1A" width="960" height="24"/>
+  <line x1="0" y1="12" x2="960" y2="12" stroke="#1B4B7A" stroke-width="0.8"/>
+  <rect class="div-sweep" y="10" width="120" height="4" fill="#3FA9F5" rx="2"/>
+</svg>

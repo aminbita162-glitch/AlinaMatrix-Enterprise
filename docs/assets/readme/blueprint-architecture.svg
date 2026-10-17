@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" role="img" aria-label="AlinaMatrix Enterprise system architecture blueprint">
+  <defs>
+    <style>
+      .bg-deep   { fill: #0A0F1A; }
+      .bg-panel  { fill: #0F1726; }
+      .bg-raise  { fill: #14203A; }
+      .grid-minor { stroke: #12304F; stroke-width: 0.5; fill: none; }
+      .grid-major { stroke: #1B4B7A; stroke-width: 0.8; fill: none; }
+      .line-primary { stroke: #3FA9F5; stroke-width: 1.5; fill: none; }
+      .line-soft    { stroke: #2A6FA8; stroke-width: 1; fill: none; }
+      .text-primary { font-family: ui-monospace, "SF Mono", monospace; fill: #E6EDF3; }
+      .text-muted   { font-family: ui-monospace, "SF Mono", monospace; fill: #8B9BB0; }
+      .text-faint    { font-family: ui-monospace, "SF Mono", monospace; fill: #5B6B80; }
+
+      @keyframes bp-scan { 0%{opacity:.15} 50%{opacity:.6} 100%{opacity:.15} }
+      .bp-scan { animation: bp-scan 3.5s ease-in-out infinite; }
+
+      @keyframes bp-pulse { 0%,100%{stroke-opacity:.30} 50%{stroke-opacity:1} }
+      .bp-pulse { animation: bp-pulse 2.8s ease-in-out infinite; }
+
+      @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+    </style>
+  </defs>
+
+  <rect class="bg-deep" width="960" height="400"/>
+
+  <g>
+    <line class="grid-minor" x1="0" y1="50"  x2="960" y2="50"/>
+    <line class="grid-minor" x1="0" y1="100" x2="960" y2="100"/>
+    <line class="grid-minor" x1="0" y1="150" x2="960" y2="150"/>
+    <line class="grid-minor" x1="0" y1="250" x2="960" y2="250"/>
+    <line class="grid-minor" x1="0" y1="300" x2="960" y2="300"/>
+    <line class="grid-minor" x1="0" y1="350" x2="960" y2="350"/>
+    <line class="grid-major" x1="0" y1="200" x2="960" y2="200"/>
+  </g>
+
+  <!-- web layer -->
+  <rect class="bg-panel" x="30" y="70" width="180" height="80" rx="6"/>
+  <text class="text-primary" x="120" y="98" font-size="12" font-weight="bold" text-anchor="middle">apps/web</text>
+  <text class="text-muted" x="120" y="116" font-size="9" text-anchor="middle">Next.js App Router</text>
+  <text class="text-faint" x="120" y="132" font-size="9" text-anchor="middle">PWA · phone test surface</text>
+
+  <!-- api layer -->
+  <rect class="bg-panel bp-pulse" x="240" y="70" width="180" height="80" rx="6"/>
+  <text class="text-primary" x="330" y="98" font-size="12" font-weight="bold" text-anchor="middle">apps/api</text>
+  <text class="text-muted" x="330" y="116" font-size="9" text-anchor="middle">Node HTTP API</text>
+  <text class="text-faint" x="330" y="132" font-size="9" text-anchor="middle">OpenAPI 3.1 · /docs · /health</text>
+
+  <!-- domain layer -->
+  <rect class="bg-panel" x="450" y="70" width="180" height="80" rx="6"/>
+  <text class="text-primary" x="540" y="98" font-size="12" font-weight="bold" text-anchor="middle">packages/domain</text>
+  <text class="text-muted" x="540" y="116" font-size="9" text-anchor="middle">State machines · provenance</text>
+  <text class="text-faint" x="540" y="132" font-size="9" text-anchor="middle">Merkle · trace · consensus</text>
+
+  <!-- contracts -->
+  <rect class="bg-panel" x="660" y="70" width="130" height="80" rx="6"/>
+  <text class="text-primary" x="725" y="98" font-size="12" font-weight="bold" text-anchor="middle">contracts</text>
+  <text class="text-muted" x="725" y="116" font-size="9" text-anchor="middle">Zod schemas</text>
+  <text class="text-faint" x="725" y="132" font-size="9" text-anchor="middle">API boundaries</text>
+
+  <!-- db layer -->
+  <rect class="bg-panel" x="240" y="200" width="180" height="80" rx="6"/>
+  <text class="text-primary" x="330" y="228" font-size="12" font-weight="bold" text-anchor="middle">packages/db</text>
+  <text class="text-muted" x="330" y="246" font-size="9" text-anchor="middle">PostgreSQL 16 · RLS</text>
+  <text class="text-faint" x="330" y="262" font-size="9" text-anchor="middle">migrations 001–014</text>
+
+  <!-- renderer -->
+  <rect class="bg-panel" x="450" y="200" width="180" height="80" rx="6"/>
+  <text class="text-primary" x="540" y="228" font-size="12" font-weight="bold" text-anchor="middle">packages/renderer</text>
+  <text class="text-muted" x="540" y="246" font-size="9" text-anchor="middle">HTML + PDF</text>
+  <text class="text-faint" x="540" y="262" font-size="9" text-anchor="middle">real %PDF- bytes</text>
+
+  <!-- Postgres -->
+  <rect class="bg-raise" x="660" y="200" width="130" height="80" rx="6"/>
+  <text class="text-primary" x="725" y="228" font-size="12" font-weight="bold" text-anchor="middle">Postgres 16</text>
+  <text class="text-muted" x="725" y="246" font-size="9" text-anchor="middle">RLS · tenant</text>
+  <text class="text-faint" x="725" y="262" font-size="9" text-anchor="middle">append-only audit</text>
+
+  <!-- Render host -->
+  <rect class="bg-raise bp-scan" x="30" y="200" width="180" height="80" rx="6"/>
+  <text class="text-primary" x="120" y="228" font-size="12" font-weight="bold" text-anchor="middle">Render (host)</text>
+  <text class="text-muted" x="120" y="246" font-size="9" text-anchor="middle">web · api · Postgres</text>
+  <text class="text-faint" x="120" y="262" font-size="9" text-anchor="middle">candidate — not production</text>
+
+  <!-- connections -->
+  <line class="line-primary" x1="210" y1="110" x2="240" y2="110"/>
+  <line class="line-soft" x1="420" y1="110" x2="450" y2="110"/>
+  <line class="line-soft" x1="630" y1="110" x2="660" y2="110"/>
+  <line class="line-primary" x1="330" y1="150" x2="330" y2="200"/>
+  <line class="line-soft" x1="540" y1="150" x2="540" y2="200"/>
+  <line class="line-primary" x1="630" y1="240" x2="660" y2="240"/>
+  <line class="line-soft" x1="210" y1="240" x2="240" y2="240"/>
+
+  <!-- caption -->
+  <text class="text-faint" x="480" y="340" font-size="10" text-anchor="middle">AlinaMatrix Enterprise — architecture blueprint. Beachhead M03 only.</text>
+  <text class="text-faint" x="480" y="360" font-size="10" text-anchor="middle">TypeScript strict · pnpm workspaces · no Express · no invented framework.</text>
+</svg>
