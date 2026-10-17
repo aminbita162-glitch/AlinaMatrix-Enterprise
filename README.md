@@ -1,7 +1,9 @@
 # AlinaMatrix Enterprise
 
-> **Enterprise Candidate — Active Development**  
+> **Enterprise Candidate — Active Development**
 > No production claim is made. Beachhead M03 is not yet proven.
+> Candidate stays until real deployment and real use.
+> A small test count is not proof of real-world capacity.
 
 ---
 
