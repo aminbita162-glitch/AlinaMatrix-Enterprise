@@ -239,6 +239,19 @@ export type {
   QuoteLockReleaseResult,
 } from "./quote-lock-release.js";
 
+// Level Up Phase D — numeric reconciliation (evidence depth)
+export {
+  NumericReconciliationError,
+  reconcileNumber,
+  reconcileNumbers,
+  discrepanciesOnly,
+  assertAllNumbersReconcile,
+} from "./numeric-reconciliation.js";
+export type {
+  NumericPair,
+  NumericReconciliationRecord,
+} from "./numeric-reconciliation.js";
+
 // R3 — live model provider (real call)
 export {
   LiveModelProvider,
