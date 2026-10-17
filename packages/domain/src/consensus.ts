@@ -239,37 +239,97 @@ export function recordConsensusDecision(
 }
 
 // ============================================================
-// evaluateConsensus — derive state from events + threshold
+// checkConsensusDeadline — compare now against the deadline
+// ============================================================
+
+export interface ConsensusDeadlineResult {
+  /** True when `now` is past the deadline. */
+  expired:  boolean;
+  /** The deadline from the config. */
+  deadline: string;
+  /** The `now` value supplied by the caller. */
+  now:      string;
+}
+
+/**
+ * Check whether the consensus deadline has passed.
+ *
+ * Returns { expired: true } when `now` > `deadline`. The caller supplies `now`
+ * — no Date.now() is used. A deadline equal to `now` is not expired (the
+ * deadline is inclusive: decisions at exactly the deadline are accepted).
+ *
+ * Directive Phase E: "Deadline."
+ */
+export function checkConsensusDeadline(
+  config: ConsensusConfig,
+  now:    string,
+): ConsensusDeadlineResult {
+  return {
+    expired:  now > config.deadline,
+    deadline: config.deadline,
+    now,
+  };
+}
+
+// ============================================================
+// assertConsensusWithinDeadline — deadline-passed rejection
 // ============================================================
 
 /**
- * Evaluate the consensus state from the decision events and the config.
+ * Assert that the consensus deadline has not passed.
+ *
+ * Throws ConsensusExpiredError when `now` is past the deadline.
+ *
+ * Directive Phase E: "Deadline."
+ */
+export function assertConsensusWithinDeadline(
+  config: ConsensusConfig,
+  now:    string,
+): void {
+  const result = checkConsensusDeadline(config, now);
+  if (result.expired) {
+    throw new ConsensusExpiredError(config.deadline, now);
+  }
+}
+
+// ============================================================
+// evaluateConsensus — derive state from events + threshold + deadline
+// ============================================================
+
+/**
+ * Evaluate the consensus state from the decision events, the config, and `now`.
  *
  * Rules:
  *   1. If any event is "rejected", the state is "rejected" (a rejection
- *      blocks approval immediately).
+ *      blocks approval immediately, regardless of deadline).
  *   2. If the number of "approved" events >= threshold, the state is "approved".
- *   3. Otherwise, the state is "pending".
+ *   3. If `now` is past the deadline and the threshold was not met, the state
+ *      is "expired".
+ *   4. Otherwise, the state is "pending".
  *
- * Published bytes do not change: the state is a pure function of the events
- * and the config. The same events + same config always produce the same state.
+ * The state is a pure function of (events, config, now). No Date.now() or
+ * Math.random() is used. The caller supplies `now`.
  *
- * Directive: "Threshold, ... Published bytes do not change."
+ * Directive Phase E: "Threshold, ... Deadline."
  */
 export function evaluateConsensus(
   events: ConsensusDecisionEvent[],
   config: ConsensusConfig,
+  now:    string,
 ): ConsensusState {
   const approvals = events.filter((e) => e.decision === "approved");
   const rejections = events.filter((e) => e.decision === "rejected");
   const approvalCount = approvals.length;
   const rejectionCount = rejections.length;
+  const deadlineExpired = now > config.deadline;
 
   let state: ConsensusStateValue;
   if (rejectionCount > 0) {
     state = "rejected";
   } else if (approvalCount >= config.threshold) {
     state = "approved";
+  } else if (deadlineExpired) {
+    state = "expired";
   } else {
     state = "pending";
   }
@@ -284,24 +344,29 @@ export function evaluateConsensus(
 }
 
 // ============================================================
-// assertConsensusApproved — threshold-not-met rejection
+// assertConsensusApproved — threshold-not-met / expired / rejected rejection
 // ============================================================
 
 /**
- * Assert that the consensus is approved (threshold met, no rejections).
+ * Assert that the consensus is approved (threshold met, no rejections, not expired).
  *
  * Throws ConsensusNotApprovedError when the threshold is not met.
+ * Throws ConsensusExpiredError when the deadline has passed.
  * Throws ConsensusRejectedError when a rejection was recorded.
  *
- * Directive: "Tests for threshold not met."
+ * Directive: "Tests for threshold not met." + Phase E: "Deadline."
  */
 export function assertConsensusApproved(
   events: ConsensusDecisionEvent[],
   config: ConsensusConfig,
+  now:    string,
 ): ConsensusState {
-  const result = evaluateConsensus(events, config);
+  const result = evaluateConsensus(events, config, now);
   if (result.state === "rejected") {
     throw new ConsensusRejectedError(result.rejectionCount);
+  }
+  if (result.state === "expired") {
+    throw new ConsensusExpiredError(config.deadline, now);
   }
   if (result.state !== "approved") {
     throw new ConsensusNotApprovedError(result.approvalCount, config.threshold);
