@@ -320,6 +320,17 @@ export type {
   ConsensusState,
 } from "./consensus.js";
 
+// Level Up Phase D — assumption register (evidence depth)
+export {
+  AssumptionRegisterEntrySchema,
+  AssumptionExpiryResultSchema,
+} from "./assumption-register.js";
+
+export type {
+  AssumptionRegisterEntry,
+  AssumptionExpiryResult,
+} from "./assumption-register.js";
+
 // R3 — live model provider (real call)
 export {
   LiveModelConfigSchema,

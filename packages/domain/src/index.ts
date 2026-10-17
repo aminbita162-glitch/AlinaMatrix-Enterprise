@@ -218,6 +218,16 @@ export {
   ConsensusInputError,
 } from "./consensus.js";
 
+// Level Up Phase D — assumption register (evidence depth)
+export {
+  AssumptionRegisterError,
+  assertAssumptionRegistered,
+  assertAllAssumptionsRegistered,
+  checkAssumptionExpiry,
+  assertAssumptionNotExpired,
+  filterExpiredAssumptions,
+} from "./assumption-register.js";
+
 // R3 — live model provider (real call)
 export {
   LiveModelProvider,
