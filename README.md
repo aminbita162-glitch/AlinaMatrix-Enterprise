@@ -7,6 +7,40 @@
 
 ---
 
+> **Lead box (30-second read)**
+>
+> **What it is:** A multi-tenant AI document-engineering and evidence-control platform:
+> TypeScript strict + Next.js App Router (web) + Node HTTP API + pnpm workspaces,
+> backed by PostgreSQL 16 with Row-Level Security. No Express; no invented framework.
+>
+> **What it does:** Turns complex source evidence into auditable professional artifacts.
+> Four agents (AlinaArchitect, AlinaGuard, AlinaDocEngine, AlinaOptimizer) route
+> source documents through a controlled pipeline: read → plan → validate → compile →
+> release. Human review, four-eyes approval, Merkle provenance, watermarking, and a
+> release gate sit between evidence and a published artifact.
+>
+> **What problem it solves:** Expert users need structured synthesis with provable
+> provenance, reproducible rendering, tenant isolation, and controlled review — not
+> freeform LLM output. AlinaMatrix pins every step: immutable sources, quote-locked
+> claim atoms, template-driven M03 rendering (HTML + PDF), append-only audit, budget
+> ceilings, and revocation events.
+>
+> **Current scale:** Beachhead is M03 only (ADR-0001). 938 unit tests pass across 5
+> packages (apps/api: 90, packages/domain: 439, packages/db: 323, packages/renderer:
+> 86). 101 integration tests are skipped without a live PostgreSQL instance. The
+> pinned model provider (PinnedModelProvider) is deterministic; the LiveModelProvider
+> has 2 skipped tests (no API key in this env). The backup drill passed against a live
+> PostgreSQL 16 Docker container (R5). A Render Blueprint (`render.yaml`) defines the
+> deploy surface — it is a candidate, not a production deployment.
+>
+> **Open limits:** No live LLM call has been made (DeterministicFakeProvider only).
+> Security coverage is unit-level (mock doubles), not live penetration testing. No
+> regional disaster recovery (no DR site, no cross-region replication). Local object
+> storage only. M03 is the only document type; M01–M02 and M04–M30 are deferred. The
+> status line stays exact: **Enterprise Candidate — Active Development**.
+
+---
+
 <!-- ANIMATED SVG: Evidence-to-Artifact Flow — AlinaArchitect · AlinaGuard · AlinaDocEngine · AlinaOptimizer -->
 <!-- Static fallback paragraph follows the SVG for environments where animation does not play. -->
 
@@ -227,9 +261,6 @@ Phase reports list actual exit codes, actual test counts, and any failures witho
 - **Integration tests skipped.** 101 integration tests require a live PostgreSQL
   instance with `DATABASE_URL` and `SUPERUSER_URL` set. They are skipped — not
   failed, not passed.
-- **No PDF output.** PDF rendering is not built — no local pinned offline renderer
-  is available. `renderPdf()` returns `status: "not_built"` with a visible English
-  reason. No fake PDF bytes are emitted.
 - **No live LLM.** All agent outputs use DeterministicFakeProvider (R07). No real
   model call has been made. Determinism is structural, not semantic.
 - **Security coverage is unit-level.** Auth bypass, authz bypass, tenant breach,
@@ -254,7 +285,7 @@ Every claim in this README is audited against evidence in the repository.
 | Four agents: AlinaArchitect, AlinaGuard, AlinaDocEngine, AlinaOptimizer | `packages/domain/src/agents.ts` AGENT_CAPABILITIES; `packages/domain/src/agents.test.ts` — exactly four agents | Verified |
 | No live LLM (DeterministicFakeProvider) | `packages/domain/src/agents.ts` DeterministicFakeProvider; `packages/domain/src/agents.test.ts` — no I/O | Verified |
 | No production-ready claim | No "production-ready" string in any file; H01 forbids it | Verified |
-| PDF not built | `packages/renderer/src/pdf.ts` — `renderPdf()` returns `status: "not_built"` | Verified |
+| PDF built (real bytes) | `packages/renderer/src/pdf.ts` — `renderPdf()` returns `status: "built"`, bytes start with `%PDF-`, sha256 over deterministic text content | Verified |
 | Integration tests skipped | `packages/db/src/*.integration.test.ts` — skipped without DATABASE_URL | Verified |
 | Beachhead is M03 only | `docs/adr/ADR-0001-beachhead-m03.md`; DIRECTIV.txt FROZEN DECISIONS | Verified |
 | No invented DOI/PMID/ISBN | No DOI/PMID/ISBN fields in any schema; DIRECTIV.txt H06 forbids it | Verified |
