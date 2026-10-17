@@ -25,12 +25,15 @@ import {
   assertNoSelfApproval,
   assertApproverAuthorized,
   recordConsensusDecision,
+  checkConsensusDeadline,
+  assertConsensusWithinDeadline,
   evaluateConsensus,
   assertConsensusApproved,
   SelfApprovalError,
   UnknownApproverError,
   ConsensusNotApprovedError,
   ConsensusRejectedError,
+  ConsensusExpiredError,
   ConsensusInputError,
 } from "./consensus.js";
 import type {
@@ -47,6 +50,9 @@ const AUTHOR   = "bbbbbbbb-0000-4000-b000-000000000002";
 const APPROVER1 = "cccccccc-0000-4000-c000-000000000003";
 const APPROVER2 = "dddddddd-0000-4000-d000-000000000004";
 const APPROVER3 = "eeeeeeee-0000-4000-e000-000000000005";
+const DEADLINE  = "2026-12-31T23:59:59.999Z";
+const NOW_BEFORE = "2026-10-06T12:00:00.000Z";
+const NOW_AFTER  = "2027-01-01T00:00:00.000Z";
 
 function makeConfig(overrides: Partial<ConsensusConfig> = {}): ConsensusConfig {
   return {
@@ -54,6 +60,7 @@ function makeConfig(overrides: Partial<ConsensusConfig> = {}): ConsensusConfig {
     approvers:  [APPROVER1, APPROVER2, APPROVER3],
     threshold:  2,
     tenantId:   TENANT,
+    deadline:   "2026-12-31T23:59:59.999Z",
     ...overrides,
   };
 }
@@ -79,6 +86,7 @@ describe("buildConsensusConfig", () => {
       approvers:  [APPROVER1, APPROVER2, APPROVER3],
       threshold:  2,
       tenantId:   TENANT,
+      deadline:   DEADLINE,
     });
     expect(cfg.authorId).toBe(AUTHOR);
     expect(cfg.approvers).toEqual([APPROVER1, APPROVER2, APPROVER3]);
@@ -93,6 +101,7 @@ describe("buildConsensusConfig", () => {
         approvers:  [],
         threshold:  1,
         tenantId:   TENANT,
+        deadline:   DEADLINE,
       }),
     ).toThrow(ConsensusInputError);
   });
@@ -104,6 +113,7 @@ describe("buildConsensusConfig", () => {
         approvers:  [APPROVER1],
         threshold:  0,
         tenantId:   TENANT,
+        deadline:   DEADLINE,
       }),
     ).toThrow(ConsensusInputError);
   });
@@ -115,6 +125,7 @@ describe("buildConsensusConfig", () => {
         approvers:  [APPROVER1, APPROVER2],
         threshold:  3,
         tenantId:   TENANT,
+        deadline:   DEADLINE,
       }),
     ).toThrow(ConsensusInputError);
   });
@@ -126,6 +137,7 @@ describe("buildConsensusConfig", () => {
         approvers:  [APPROVER1],
         threshold:  1,
         tenantId:   "",
+        deadline:   DEADLINE,
       }),
     ).toThrow(ConsensusInputError);
   });
@@ -137,6 +149,7 @@ describe("buildConsensusConfig", () => {
         approvers:  [AUTHOR, APPROVER1],
         threshold:  1,
         tenantId:   TENANT,
+        deadline:   DEADLINE,
       }),
     ).toThrow(SelfApprovalError);
   });
@@ -252,7 +265,7 @@ describe("recordConsensusDecision", () => {
 describe("evaluateConsensus", () => {
   it("returns pending when no events", () => {
     const cfg = makeConfig({ threshold: 2 });
-    const result = evaluateConsensus([], cfg);
+    const result = evaluateConsensus([], cfg, NOW_BEFORE);
     expect(result.state).toBe("pending");
     expect(result.approved).toBe(false);
     expect(result.approvalCount).toBe(0);
@@ -262,7 +275,7 @@ describe("evaluateConsensus", () => {
   it("returns pending when approvals below threshold", () => {
     const cfg = makeConfig({ threshold: 2 });
     const events = [makeEvent({ approverId: APPROVER1 })];
-    const result = evaluateConsensus(events, cfg);
+    const result = evaluateConsensus(events, cfg, NOW_BEFORE);
     expect(result.state).toBe("pending");
     expect(result.approved).toBe(false);
     expect(result.approvalCount).toBe(1);
@@ -274,7 +287,7 @@ describe("evaluateConsensus", () => {
       makeEvent({ approverId: APPROVER1, decidedAt: "2026-10-06T12:00:00.000Z" }),
       makeEvent({ approverId: APPROVER2, decidedAt: "2026-10-06T12:01:00.000Z" }),
     ];
-    const result = evaluateConsensus(events, cfg);
+    const result = evaluateConsensus(events, cfg, NOW_BEFORE);
     expect(result.state).toBe("approved");
     expect(result.approved).toBe(true);
     expect(result.approvalCount).toBe(2);
@@ -287,7 +300,7 @@ describe("evaluateConsensus", () => {
       makeEvent({ approverId: APPROVER2 }),
       makeEvent({ approverId: APPROVER3 }),
     ];
-    const result = evaluateConsensus(events, cfg);
+    const result = evaluateConsensus(events, cfg, NOW_BEFORE);
     expect(result.state).toBe("approved");
     expect(result.approvalCount).toBe(3);
   });
@@ -299,7 +312,7 @@ describe("evaluateConsensus", () => {
       makeEvent({ approverId: APPROVER2 }),
       makeEvent({ approverId: APPROVER3, decision: "rejected" }),
     ];
-    const result = evaluateConsensus(events, cfg);
+    const result = evaluateConsensus(events, cfg, NOW_BEFORE);
     expect(result.state).toBe("rejected");
     expect(result.approved).toBe(false);
     expect(result.rejectionCount).toBe(1);
@@ -310,7 +323,7 @@ describe("evaluateConsensus", () => {
     const events = [
       makeEvent({ approverId: APPROVER1, decision: "rejected" }),
     ];
-    const result = evaluateConsensus(events, cfg);
+    const result = evaluateConsensus(events, cfg, NOW_BEFORE);
     expect(result.state).toBe("rejected");
   });
 
@@ -320,8 +333,8 @@ describe("evaluateConsensus", () => {
       makeEvent({ approverId: APPROVER1 }),
       makeEvent({ approverId: APPROVER2 }),
     ];
-    const a = evaluateConsensus(events, cfg);
-    const b = evaluateConsensus(events, cfg);
+    const a = evaluateConsensus(events, cfg, NOW_BEFORE);
+    const b = evaluateConsensus(events, cfg, NOW_BEFORE);
     expect(a).toEqual(b);
   });
 });
@@ -337,7 +350,7 @@ describe("assertConsensusApproved (threshold-not-met rejection)", () => {
       makeEvent({ approverId: APPROVER1 }),
       makeEvent({ approverId: APPROVER2 }),
     ];
-    const result = assertConsensusApproved(events, cfg);
+    const result = assertConsensusApproved(events, cfg, NOW_BEFORE);
     expect(result.state).toBe("approved");
     expect(result.approved).toBe(true);
   });
@@ -345,7 +358,7 @@ describe("assertConsensusApproved (threshold-not-met rejection)", () => {
   it("throws ConsensusNotApprovedError when threshold not met", () => {
     const cfg = makeConfig({ threshold: 2 });
     const events = [makeEvent({ approverId: APPROVER1 })];
-    expect(() => assertConsensusApproved(events, cfg)).toThrow(
+    expect(() => assertConsensusApproved(events, cfg, NOW_BEFORE)).toThrow(
       ConsensusNotApprovedError,
     );
   });
@@ -354,7 +367,7 @@ describe("assertConsensusApproved (threshold-not-met rejection)", () => {
     const cfg = makeConfig({ threshold: 3 });
     const events = [makeEvent({ approverId: APPROVER1 })];
     try {
-      assertConsensusApproved(events, cfg);
+      assertConsensusApproved(events, cfg, NOW_BEFORE);
       throw new Error("should have thrown");
     } catch (e) {
       expect(e).toBeInstanceOf(ConsensusNotApprovedError);
@@ -369,15 +382,150 @@ describe("assertConsensusApproved (threshold-not-met rejection)", () => {
     const events = [
       makeEvent({ approverId: APPROVER1, decision: "rejected" }),
     ];
-    expect(() => assertConsensusApproved(events, cfg)).toThrow(
+    expect(() => assertConsensusApproved(events, cfg, NOW_BEFORE)).toThrow(
       ConsensusRejectedError,
     );
   });
 
   it("throws ConsensusNotApprovedError when no events", () => {
     const cfg = makeConfig({ threshold: 1 });
-    expect(() => assertConsensusApproved([], cfg)).toThrow(
+    expect(() => assertConsensusApproved([], cfg, NOW_BEFORE)).toThrow(
       ConsensusNotApprovedError,
     );
+  });
+});
+
+// ===========================================================================
+// checkConsensusDeadline — deadline enforcement
+// ===========================================================================
+
+describe("checkConsensusDeadline", () => {
+  it("returns expired=false when now is before the deadline", () => {
+    const cfg = makeConfig();
+    const result = checkConsensusDeadline(cfg, NOW_BEFORE);
+    expect(result.expired).toBe(false);
+    expect(result.deadline).toBe(cfg.deadline);
+    expect(result.now).toBe(NOW_BEFORE);
+  });
+
+  it("returns expired=false when now equals the deadline (inclusive)", () => {
+    const cfg = makeConfig();
+    const result = checkConsensusDeadline(cfg, cfg.deadline);
+    expect(result.expired).toBe(false);
+  });
+
+  it("returns expired=true when now is after the deadline", () => {
+    const cfg = makeConfig();
+    const result = checkConsensusDeadline(cfg, NOW_AFTER);
+    expect(result.expired).toBe(true);
+  });
+});
+
+// ===========================================================================
+// assertConsensusWithinDeadline — deadline-passed rejection
+// ===========================================================================
+
+describe("assertConsensusWithinDeadline", () => {
+  it("does not throw when now is before the deadline", () => {
+    const cfg = makeConfig();
+    expect(() => assertConsensusWithinDeadline(cfg, NOW_BEFORE)).not.toThrow();
+  });
+
+  it("does not throw when now equals the deadline (inclusive)", () => {
+    const cfg = makeConfig();
+    expect(() => assertConsensusWithinDeadline(cfg, cfg.deadline)).not.toThrow();
+  });
+
+  it("throws ConsensusExpiredError when now is after the deadline", () => {
+    const cfg = makeConfig();
+    expect(() => assertConsensusWithinDeadline(cfg, NOW_AFTER)).toThrow(
+      ConsensusExpiredError,
+    );
+  });
+
+  it("the ConsensusExpiredError message names the deadline and now", () => {
+    const cfg = makeConfig();
+    try {
+      assertConsensusWithinDeadline(cfg, NOW_AFTER);
+      throw new Error("should have thrown");
+    } catch (e) {
+      expect(e).toBeInstanceOf(ConsensusExpiredError);
+      const msg = (e as ConsensusExpiredError).message;
+      expect(msg).toContain(cfg.deadline);
+      expect(msg).toContain(NOW_AFTER);
+    }
+  });
+});
+
+// ===========================================================================
+// evaluateConsensus — expired state
+// ===========================================================================
+
+describe("evaluateConsensus — expired state", () => {
+  it("returns expired when deadline passed and threshold not met", () => {
+    const cfg = makeConfig({ threshold: 2 });
+    const events = [makeEvent({ approverId: APPROVER1 })];
+    const result = evaluateConsensus(events, cfg, NOW_AFTER);
+    expect(result.state).toBe("expired");
+    expect(result.approved).toBe(false);
+  });
+
+  it("returns approved (not expired) when threshold met before deadline", () => {
+    const cfg = makeConfig({ threshold: 2 });
+    const events = [
+      makeEvent({ approverId: APPROVER1 }),
+      makeEvent({ approverId: APPROVER2 }),
+    ];
+    const result = evaluateConsensus(events, cfg, NOW_BEFORE);
+    expect(result.state).toBe("approved");
+  });
+
+  it("returns approved even when deadline passed if threshold was met", () => {
+    const cfg = makeConfig({ threshold: 2 });
+    const events = [
+      makeEvent({ approverId: APPROVER1 }),
+      makeEvent({ approverId: APPROVER2 }),
+    ];
+    const result = evaluateConsensus(events, cfg, NOW_AFTER);
+    expect(result.state).toBe("approved");
+  });
+
+  it("returns rejected (not expired) when a rejection is present even after deadline", () => {
+    const cfg = makeConfig({ threshold: 1 });
+    const events = [
+      makeEvent({ approverId: APPROVER1, decision: "rejected" }),
+    ];
+    const result = evaluateConsensus(events, cfg, NOW_AFTER);
+    expect(result.state).toBe("rejected");
+  });
+
+  it("returns pending when deadline not passed and threshold not met", () => {
+    const cfg = makeConfig({ threshold: 2 });
+    const events = [makeEvent({ approverId: APPROVER1 })];
+    const result = evaluateConsensus(events, cfg, NOW_BEFORE);
+    expect(result.state).toBe("pending");
+  });
+});
+
+// ===========================================================================
+// assertConsensusApproved — expired rejection
+// ===========================================================================
+
+describe("assertConsensusApproved — expired rejection", () => {
+  it("throws ConsensusExpiredError when deadline passed and threshold not met", () => {
+    const cfg = makeConfig({ threshold: 2 });
+    const events = [makeEvent({ approverId: APPROVER1 })];
+    expect(() => assertConsensusApproved(events, cfg, NOW_AFTER)).toThrow(
+      ConsensusExpiredError,
+    );
+  });
+
+  it("does not throw when threshold met before deadline", () => {
+    const cfg = makeConfig({ threshold: 2 });
+    const events = [
+      makeEvent({ approverId: APPROVER1 }),
+      makeEvent({ approverId: APPROVER2 }),
+    ];
+    expect(() => assertConsensusApproved(events, cfg, NOW_BEFORE)).not.toThrow();
   });
 });

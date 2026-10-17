@@ -203,19 +203,25 @@ export {
   TemplateInputError,
 } from "./template.js";
 
-// Phase E — multi-party consensus review
+// Phase E — multi-party consensus review (with deadline)
 export {
   buildConsensusConfig,
   assertNoSelfApproval,
   assertApproverAuthorized,
   recordConsensusDecision,
+  checkConsensusDeadline,
+  assertConsensusWithinDeadline,
   evaluateConsensus,
   assertConsensusApproved,
   SelfApprovalError,
   UnknownApproverError,
   ConsensusNotApprovedError,
   ConsensusRejectedError,
+  ConsensusExpiredError,
   ConsensusInputError,
+} from "./consensus.js";
+export type {
+  ConsensusDeadlineResult,
 } from "./consensus.js";
 
 // Phase E — reviewer diff between two builds
