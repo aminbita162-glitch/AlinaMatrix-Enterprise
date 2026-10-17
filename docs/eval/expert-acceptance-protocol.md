@@ -84,7 +84,7 @@ Status: Enterprise Candidate — Active Development
 | No invented claim in HTML | __ | |
 | Unknown assertion keys dropped | __ | |
 | Manifest pins present | __ | |
-| PDF not built (honestly) | __ | |
+| PDF emits real bytes (honestly) | __ | |
 
 ### 7. Security
 
@@ -135,11 +135,23 @@ Status: Enterprise Candidate — Active Development
 ## Open limitations (declared honestly per H05)
 
 1. **Integration tests skipped.** 101 integration tests require a live
-   PostgreSQL instance and are skipped without `DATABASE_URL`.
-2. **PDF not built.** No local pinned offline PDF renderer is available.
-3. **No live LLM.** All agent outputs use DeterministicFakeProvider (R07).
+   PostgreSQL instance and are skipped without `DATABASE_URL` and
+   `SUPERUSER_URL`.
+2. **PDF is built.** `renderPdf()` in `packages/renderer/src/pdf.ts` emits real
+   `%PDF-` bytes via pdfkit@0.20.2 (13 tests in `pdf.test.ts`). Raw PDF bytes
+   are non-deterministic at the byte level — the content sha256 provides the
+   replay invariant.
+3. **No live LLM.** `LiveModelProvider` is implemented; 2 live-call tests are
+   skipped (no `OPENAI_API_KEY`). All other agent outputs use
+   `DeterministicFakeProvider` (R07). No real model call has been recorded.
 4. **Security coverage is unit-level.** Mock doubles, not live integration.
-5. **No regional disaster recovery.** Not implemented, not claimed.
-6. **Drill script not run against a live database.** Procedure only.
+   R4 live security tests require a deployed service — no deployed service
+   exists in this environment.
+5. **No regional disaster recovery.** No DR site, no cross-region replication,
+   no point-in-time recovery. The backup drill (`scripts/backup-drill.sh`)
+   passed against a local PostgreSQL 16 Docker container (exit 0; evidence in
+   `docs/runbooks/backup-restore.md`), but regional recovery is not claimed.
+6. **No deployed service.** The Render Blueprint (`render.yaml`) defines the
+   deployment surface but has not been deployed in this environment.
 
 No production claim is made. Do not deploy as a production system.
