@@ -11,6 +11,7 @@ import { verify as argon2Verify } from "@node-rs/argon2";
 import { v4 as uuidv4 } from "uuid";
 import type pg from "pg";
 import { logger } from "./logger.js";
+import { withPoolClient } from "./db-pool.js";
 
 export const SESSION_COOKIE = "sid";
 
@@ -115,6 +116,91 @@ export function createPgAuthDb(client: pg.PoolClient): AuthDb {
          VALUES ($1, $2, $3, $4, $5)`,
         [tenantId, userId, action, resource, resourceId ?? null],
       );
+    },
+  };
+}
+
+/**
+ * Pool-based AuthDb factory.
+ *
+ * Acquires a client from the pool per operation, runs inside a transaction,
+ * and releases the client back to the pool when done.  Tenant context is
+ * set transaction-locally for the operations that have a tenant_id
+ * (createSession, recordAuditEvent); findUserByEmail and findSession are
+ * pre-auth lookups that run without tenant context.
+ */
+export function createPoolAuthDb(pool: pg.Pool): AuthDb {
+  return {
+    async findUserByEmail(email) {
+      return withPoolClient(pool, null, async (client) => {
+        const result = await client.query<{
+          id: string;
+          email: string;
+          password_hash: string;
+        }>("SELECT id, email, password_hash FROM users WHERE email = $1", [email]);
+        const row = result.rows[0];
+        if (!row) return null;
+        return { userId: row.id, email: row.email, passwordHash: row.password_hash };
+      });
+    },
+
+    async findMembershipByUser(userId) {
+      return withPoolClient(pool, null, async (client) => {
+        const result = await client.query<{ tenant_id: string }>(
+          "SELECT tenant_id FROM memberships WHERE user_id = $1 LIMIT 1",
+          [userId],
+        );
+        const row = result.rows[0];
+        if (!row) return null;
+        return { tenantId: row.tenant_id };
+      });
+    },
+
+    async createSession(session) {
+      await withPoolClient(pool, session.tenantId, async (client) => {
+        await client.query(
+          `INSERT INTO sessions (id, user_id, tenant_id, expires_at) VALUES ($1, $2, $3, $4)`,
+          [session.sessionId, session.userId, session.tenantId, session.expiresAt],
+        );
+      });
+    },
+
+    async findSession(sessionId) {
+      return withPoolClient(pool, null, async (client) => {
+        const result = await client.query<{
+          id: string;
+          user_id: string;
+          tenant_id: string;
+          expires_at: Date;
+        }>(
+          "SELECT id, user_id, tenant_id, expires_at FROM sessions WHERE id = $1 AND expires_at > now()",
+          [sessionId],
+        );
+        const row = result.rows[0];
+        if (!row) return null;
+        return {
+          sessionId: row.id,
+          userId: row.user_id,
+          tenantId: row.tenant_id,
+          expiresAt: row.expires_at,
+        };
+      });
+    },
+
+    async deleteSession(sessionId) {
+      await withPoolClient(pool, null, async (client) => {
+        await client.query("DELETE FROM sessions WHERE id = $1", [sessionId]);
+      });
+    },
+
+    async recordAuditEvent(tenantId, userId, action, resource, resourceId) {
+      await withPoolClient(pool, tenantId, async (client) => {
+        await client.query(
+          `INSERT INTO audit_events (tenant_id, user_id, action, resource, resource_id)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [tenantId, userId, action, resource, resourceId ?? null],
+        );
+      });
     },
   };
 }
