@@ -37,11 +37,28 @@ export type PinnedModelConfig = z.infer<typeof PinnedModelConfigSchema>;
 // Semantic variance record — records the difference between providers
 // ============================================================
 
+/**
+ * Record the semantic variance between DeterministicFakeProvider and
+ * a second provider (PinnedModelProvider or LiveModelProvider) for the
+ * same input.
+ *
+ * Returns a SemanticVarianceRecord that captures:
+ *   - The fake provider's output hash.
+ *   - The second provider's output hash (or a sentinel:
+ *     "budget_breached" when over budget, "live_blocked" when the
+ *     live call was blocked by a missing key or schema mismatch).
+ *   - Whether they are the same (should be false — different providers).
+ *   - A human-readable English description of the variance.
+ */
 export const SemanticVarianceRecordSchema = z.object({
   /** Output hash from the DeterministicFakeProvider for the same input. */
   fakeOutputHash:       z.string().length(64),
-  /** Output hash from the PinnedModelProvider for the same input. */
-  pinnedOutputHash:     z.string().length(64),
+  /**
+   * Output hash from the second provider. Either a 64-char SHA-256
+   * hex string or one of the sentinel values "budget_breached" or
+   * "live_blocked" when the second provider did not produce output.
+   */
+  pinnedOutputHash:     z.string().min(1),
   /** True if both hashes are identical (unexpected — should be false). */
   sameHash:              z.boolean(),
   /** Human-readable English description of the variance. */

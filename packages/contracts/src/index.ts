@@ -320,6 +320,19 @@ export type {
   ConsensusState,
 } from "./consensus.js";
 
+// R3 — live model provider (real call)
+export {
+  LiveModelConfigSchema,
+  LiveCallBlockedResultSchema,
+  LiveModelOutputSchema,
+} from "./live-model.js";
+
+export type {
+  LiveModelConfig,
+  LiveCallBlockedResult,
+  LiveModelOutput,
+} from "./live-model.js";
+
 // R3 — pinned live model provider
 export {
   PinnedModelConfigSchema,

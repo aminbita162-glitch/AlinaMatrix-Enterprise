@@ -218,6 +218,12 @@ export {
   ConsensusInputError,
 } from "./consensus.js";
 
+// R3 — live model provider (real call)
+export {
+  LiveModelProvider,
+  recordLiveSemanticVariance,
+} from "./live-model.js";
+
 // R3 — pinned live model provider
 export {
   PinnedModelProvider,
