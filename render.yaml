@@ -17,8 +17,8 @@ databases:
     databaseName: alinamatrix
     plan: starter
     # Render-managed PostgreSQL 16 is the isolation + audit store.
-    # Apply migrations 001–014 via a preDeploy hook or a manual run of
-    # packages/db/migrations/*.sql against the provisioned DATABASE_URL.
+    # Migrations 001–014 are applied automatically by the api preDeployCommand
+    # (scripts/ci-migrate.mjs) before the API starts serving traffic.
 
 services:
   - name: alinamatrix-api
@@ -27,6 +27,7 @@ services:
     plan: starter
     rootDir: apps/api
     buildCommand: pnpm install --frozen-lockfile && pnpm --filter @alinamatrix/api build
+    preDeployCommand: SUPERUSER_URL=$DATABASE_URL node scripts/ci-migrate.mjs
     startCommand: node dist/server.js
     healthCheckPath: /health
     autoDeploy: true
