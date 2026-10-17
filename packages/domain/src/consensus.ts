@@ -1,28 +1,33 @@
 /**
- * Multi-party consensus review — Phase E (Unit 2: consensus review).
+ * Multi-party consensus review — Phase E (Unit 2: consensus review with deadline).
  *
  * Covers:
  *   - buildConsensusConfig — validate and assemble a consensus config (N
- *     approvers, threshold, no self-approval).
+ *     approvers, threshold, deadline, no self-approval).
  *   - assertNoSelfApproval — throw SelfApprovalError when the author submits
  *     an approval (no self-approval).
  *   - assertApproverAuthorized — throw UnknownApproverError when an approver
  *     is not in the named approver set.
  *   - recordConsensusDecision — append a decision event (append-only).
- *   - evaluateConsensus — derive the consensus state from the decision events
- *     and the threshold (threshold not met → pending; threshold met → approved;
- *     any rejection → rejected).
+ *   - checkConsensusDeadline — return { expired, deadline, now } comparing
+ *     the current time against the config deadline.
+ *   - assertConsensusWithinDeadline — throw ConsensusExpiredError when the
+ *     deadline has passed.
+ *   - evaluateConsensus — derive the consensus state from the decision events,
+ *     the threshold, and the deadline (threshold not met → pending; threshold
+ *     met → approved; any rejection → rejected; deadline passed → expired).
  *   - assertConsensusApproved — throw ConsensusNotApprovedError when the
- *     threshold is not met (threshold-not-met rejection).
+ *     threshold is not met, ConsensusExpiredError when expired, or
+ *     ConsensusRejectedError when rejected.
  *
  * Directive Phase E:
  *   "Multi-party consensus review: N named approvers, threshold, no
- *    self-approval, decision event append-only. Published bytes do not
- *    change."
+ *    self-approval, decision event append-only. ... Deadline."
  *
  * Determinism:
- *   - evaluateConsensus is a pure function of (events, config).
- *   - No Date.now() or Math.random() is used. The caller supplies timestamps.
+ *   - evaluateConsensus is a pure function of (events, config, now).
+ *   - The caller supplies `now` (the current time). No Date.now() or
+ *     Math.random() is used.
  *
  * Status: Enterprise Candidate — Active Development
  */
@@ -75,6 +80,16 @@ export class ConsensusRejectedError extends Error {
       "A rejection blocks consensus approval.",
     );
     this.name = "ConsensusRejectedError";
+  }
+}
+
+export class ConsensusExpiredError extends Error {
+  constructor(deadline: string, now: string) {
+    super(
+      `Consensus expired: deadline ${deadline} has passed (now: ${now}). ` +
+      "The threshold was not met before the deadline.",
+    );
+    this.name = "ConsensusExpiredError";
   }
 }
 
