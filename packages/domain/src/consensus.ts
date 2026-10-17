@@ -109,6 +109,8 @@ export interface BuildConsensusConfigInput {
   approvers:   string[];
   threshold:   number;
   tenantId:    string;
+  /** Deadline for consensus decisions (ISO-8601 UTC). */
+  deadline:    string;
 }
 
 /**
@@ -119,6 +121,7 @@ export interface BuildConsensusConfigInput {
  *   - threshold <= 0 or threshold > approvers.length.
  *   - author is in the approvers set (no self-approval).
  *   - tenantId is empty.
+ *   - deadline is empty.
  *
  * The tenant id is server-derived (from the session membership) and is never
  * accepted from the client as the isolation authority (H03).
@@ -138,6 +141,9 @@ export function buildConsensusConfig(input: BuildConsensusConfigInput): Consensu
   if (input.tenantId.length === 0) {
     throw new ConsensusInputError("tenantId must not be empty");
   }
+  if (input.deadline.length === 0) {
+    throw new ConsensusInputError("deadline must not be empty");
+  }
   if (input.approvers.includes(input.authorId)) {
     throw new SelfApprovalError(input.authorId);
   }
@@ -146,6 +152,7 @@ export function buildConsensusConfig(input: BuildConsensusConfigInput): Consensu
     approvers:   [...input.approvers],
     threshold:   input.threshold,
     tenantId:    input.tenantId,
+    deadline:    input.deadline,
   };
 }
 
