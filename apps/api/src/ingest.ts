@@ -30,6 +30,15 @@ import { extractText, ExtractionError } from "./extractor.js";
 import type { SupportedMimeType } from "./extractor.js";
 import type { TextFragment } from "@alinamatrix/domain";
 import { logger } from "./logger.js";
+import { withPoolClient } from "./db-pool.js";
+import type pg from "pg";
+import {
+  setTenantContext,
+  insertSource,
+  upsertSourceVersion,
+  setVersionStatus,
+  insertSourceFragments,
+} from "@alinamatrix/db";
 
 // Silence unused import warning — uuid is used below
 void uuidv4;
@@ -75,6 +84,72 @@ export interface IngestDb {
     resourceId: string,
     detail?:    Record<string, unknown>,
   ): Promise<void>;
+}
+
+// ============================================================
+// Pool-based IngestDb factory
+// ============================================================
+
+/**
+ * Pool-based IngestDb factory.
+ *
+ * Each operation acquires a client from the pool, sets tenant context, runs
+ * the operation inside a transaction, and releases the client back to the
+ * pool.  Storage I/O (storage.put) runs outside the DB transaction — it is
+ * not transactional and must not block the pool client.
+ */
+export function createPoolIngestDb(pool: pg.Pool): IngestDb {
+  return {
+    async insertSource(params) {
+      return withPoolClient(pool, params.tenantId, async (client) => {
+        return insertSource(client, params);
+      });
+    },
+
+    async upsertSourceVersion(params) {
+      return withPoolClient(pool, params.tenantId, async (client) => {
+        return upsertSourceVersion(client, params);
+      });
+    },
+
+    async setVersionStatus(versionId, status, failReason) {
+      await withPoolClient(pool, null, async (client) => {
+        // Re-set tenant context for the update — caller passes versionId only.
+        // The UPDATE is tenant-scoped via RLS; we set context from the version row.
+        const res = await client.query<{ tenant_id: string }>(
+          "SELECT tenant_id FROM source_versions WHERE id = $1",
+          [versionId],
+        );
+        if (res.rows[0]) {
+          await setTenantContext(client, res.rows[0].tenant_id);
+          await setVersionStatus(client, versionId, status, failReason);
+        }
+      });
+    },
+
+    async insertSourceFragments(versionId, tenantId, fragments) {
+      return withPoolClient(pool, tenantId, async (client) => {
+        return insertSourceFragments(client, versionId, tenantId, fragments);
+      });
+    },
+
+    async recordAuditEvent(tenantId, userId, action, resource, resourceId, detail) {
+      await withPoolClient(pool, tenantId, async (client) => {
+        await client.query(
+          `INSERT INTO audit_events (tenant_id, user_id, action, resource, resource_id, detail)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [
+            tenantId,
+            userId,
+            action,
+            resource,
+            resourceId,
+            JSON.stringify(detail ?? {}),
+          ],
+        );
+      });
+    },
+  };
 }
 
 // ============================================================
