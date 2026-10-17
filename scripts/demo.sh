@@ -4,9 +4,10 @@
 # Runs the golden suite and prints the status line plus open limitations.
 # No live LLM. No production claim. DeterministicFakeProvider only.
 #
-# Directive Phase A:
+# Directive Phase A + Phase F:
 #   "Root 30-second English demo runs the golden suite and prints the status
 #   line plus open limitations."
+#   Phase F: "Demo that also reads the open limits."
 #
 # Usage: bash scripts/demo.sh
 #
@@ -29,12 +30,14 @@ pnpm --filter @alinamatrix/domain test 2>&1 | tail -5
 echo ""
 echo "--- Golden suite complete ---"
 echo ""
-echo "Open limitations:"
+echo "Open limitations (read from source):"
 echo "  - Beachhead (M03) not yet proven — end-to-end requires live PostgreSQL"
 echo "  - 101 integration tests skipped (require DATABASE_URL + SUPERUSER_URL)"
-echo "  - No PDF output — renderPdf() returns status: not_built"
-echo "  - No live LLM — DeterministicFakeProvider only (R07)"
+echo "  - 2 live-model tests skipped (require OPENAI_API_KEY)"
+echo "  - No live LLM call recorded — DeterministicFakeProvider only (R07)"
 echo "  - Security coverage is unit-level, not live integration"
+echo "  - No regional disaster recovery"
+echo "  - Actual user count: 0 (no real users — not a capacity claim)"
 echo ""
 echo "Product sentence: Turn complex evidence into auditable professional artifacts."
 echo ""
