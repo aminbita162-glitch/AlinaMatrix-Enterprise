@@ -34,6 +34,18 @@ import type {
   ApprovalRow,
   CommentRow,
 } from "@alinamatrix/db";
+import type pg from "pg";
+import { withPoolClient } from "./db-pool.js";
+import {
+  insertReviewTask,
+  getReviewTask as dbGetReviewTask,
+  listOpenReviewTasks as dbListOpenReviewTasks,
+  updateReviewTaskState as dbUpdateReviewTaskState,
+  insertApproval as dbInsertApproval,
+  listApprovalsByTask as dbListApprovalsByTask,
+  insertComment as dbInsertComment,
+  listCommentsByTask as dbListCommentsByTask,
+} from "@alinamatrix/db";
 
 // ============================================================
 // DB interface — injected by caller; avoids direct DB import coupling
@@ -57,6 +69,73 @@ export interface ReviewDb {
   }): Promise<CommentRow>;
   listCommentsByTask(taskId: string): Promise<CommentRow[]>;
   updateClaimReviewerStatus?(claimId: string, status: "pending" | "accepted" | "rejected"): Promise<void>;
+}
+
+// ============================================================
+// Pool-based ReviewDb factory
+// ============================================================
+
+/**
+ * Pool-based ReviewDb factory.
+ *
+ * Each operation acquires a client from the pool, sets tenant context where
+ * the tenant_id is known, runs the operation inside a transaction, and
+ * releases the client back to the pool.
+ */
+export function createPoolReviewDb(pool: pg.Pool): ReviewDb {
+  return {
+    async insertReviewTask(params) {
+      return withPoolClient(pool, params.tenantId, async (client) => {
+        return insertReviewTask(client, params);
+      });
+    },
+
+    async getReviewTask(taskId) {
+      // Read-only; tenant context is not set because we don't have tenant_id
+      // at this point.  RLS will filter to the current tenant — but on Render
+      // the connection runs as the database owner and bypasses RLS.  In CI
+      // the unit tests use mock ReviewDb, not this factory.
+      return withPoolClient(pool, null, async (client) => {
+        return dbGetReviewTask(client, taskId);
+      });
+    },
+
+    async listOpenReviewTasks(tenantId) {
+      return withPoolClient(pool, tenantId, async (client) => {
+        return dbListOpenReviewTasks(client, tenantId);
+      });
+    },
+
+    async updateReviewTaskState(taskId, state) {
+      await withPoolClient(pool, null, async (client) => {
+        await dbUpdateReviewTaskState(client, taskId, state);
+      });
+    },
+
+    async insertApproval(params) {
+      return withPoolClient(pool, params.tenantId, async (client) => {
+        return dbInsertApproval(client, params);
+      });
+    },
+
+    async listApprovalsByTask(taskId) {
+      return withPoolClient(pool, null, async (client) => {
+        return dbListApprovalsByTask(client, taskId);
+      });
+    },
+
+    async insertComment(params) {
+      return withPoolClient(pool, params.tenantId, async (client) => {
+        return dbInsertComment(client, params);
+      });
+    },
+
+    async listCommentsByTask(taskId) {
+      return withPoolClient(pool, null, async (client) => {
+        return dbListCommentsByTask(client, taskId);
+      });
+    },
+  };
 }
 
 // ============================================================
