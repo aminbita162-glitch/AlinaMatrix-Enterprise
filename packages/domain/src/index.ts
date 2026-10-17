@@ -252,6 +252,20 @@ export type {
   NumericReconciliationRecord,
 } from "./numeric-reconciliation.js";
 
+// Level Up Phase D — negative evidence recording (evidence depth)
+export {
+  NegativeEvidenceRecordError,
+  recordNegativeEvidence,
+  assertNegativeEvidenceRecorded,
+  buildAbsenceNote,
+  recordFragmentAbsence,
+  absencesForSource,
+} from "./negative-evidence.js";
+export type {
+  NegativeEvidenceKind,
+  NegativeEvidenceRecord,
+} from "./negative-evidence.js";
+
 // R3 — live model provider (real call)
 export {
   LiveModelProvider,
