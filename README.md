@@ -1,5 +1,11 @@
 # AlinaMatrix Enterprise
 
+> Integrity is a person's greatest asset.
+>
+> Humanity is not defined by a job title, professional status, or position of authority.
+>
+> These are not merely principles I advocate; they are values I strive to live by.
+
 > **Enterprise Candidate — Active Development**
 > No production claim is made. Beachhead M03 is not yet proven.
 > Candidate stays until real deployment and real use.
