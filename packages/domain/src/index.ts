@@ -228,6 +228,17 @@ export {
   filterExpiredAssumptions,
 } from "./assumption-register.js";
 
+// Level Up Phase D — quote-lock release gate (evidence depth)
+export {
+  QuoteLockReleaseError,
+  checkQuoteLockReleaseGate,
+  assertQuoteLockReleaseGate,
+} from "./quote-lock-release.js";
+export type {
+  QuoteLockClaimRef,
+  QuoteLockReleaseResult,
+} from "./quote-lock-release.js";
+
 // R3 — live model provider (real call)
 export {
   LiveModelProvider,
