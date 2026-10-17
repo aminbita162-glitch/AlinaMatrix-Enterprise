@@ -2,17 +2,18 @@
  * Consensus review contracts — Phase E (Unit 2: multi-party consensus review).
  *
  * Zod schemas for the multi-party consensus review:
- *   - ConsensusConfigSchema     — N named approvers, threshold (min approvals).
+ *   - ConsensusConfigSchema     — N named approvers, threshold (min approvals),
+ *                                 deadline (ISO-8601 UTC).
  *   - ConsensusDecisionEventSchema — an append-only decision event (approver id,
  *                                    decision, timestamp).
  *   - ConsensusStateSchema       — the current consensus state (pending,
- *                                    approved, rejected) derived from the
- *                                    decision events and the threshold.
+ *                                    approved, rejected, expired) derived from
+ *                                    the decision events, the threshold, and
+ *                                    the deadline.
  *
  * Directive Phase E:
  *   "Multi-party consensus review: N named approvers, threshold, no
- *    self-approval, decision event append-only. Published bytes do not
- *    change."
+ *    self-approval, decision event append-only. ... Deadline."
  *
  * Status: Enterprise Candidate — Active Development
  */
@@ -58,6 +59,14 @@ export const ConsensusConfigSchema = z.object({
   threshold:   z.number().int().positive(),
   /** The tenant id (server-derived; never client-supplied as authority). */
   tenantId:    UuidString,
+  /**
+   * Deadline for consensus decisions (ISO-8601 UTC). Decisions recorded
+   * after this deadline are expired. The deadline is enforced by
+   * checkConsensusDeadline in the domain layer.
+   *
+   * Directive Phase E: "Deadline."
+   */
+  deadline:    IsoUtc,
 }).refine(
   (cfg) => cfg.threshold <= cfg.approvers.length,
   { message: "threshold must not exceed the number of approvers" },
@@ -96,18 +105,23 @@ export type ConsensusDecisionEvent = z.infer<typeof ConsensusDecisionEventSchema
 // ============================================================
 
 export const ConsensusStateValueSchema = z.enum([
-  "pending",    // not enough approvals yet, no rejections
-  "approved",   // threshold met (>= threshold approvals, no rejections)
+  "pending",    // not enough approvals yet, no rejections, not expired
+  "approved",   // threshold met (>= threshold approvals, no rejections, not expired)
   "rejected",   // a rejection was recorded (immediate rejection)
+  "expired",    // deadline passed before threshold was met (no rejection, not approved)
 ]);
 export type ConsensusStateValue = z.infer<typeof ConsensusStateValueSchema>;
 
 /**
- * The derived consensus state from the decision events and the config.
+ * The derived consensus state from the decision events, the config, and the
+ * deadline.
  *
  * - "rejected" when any decision event is "rejected".
- * - "approved" when the number of "approved" events >= threshold.
- * - "pending" otherwise.
+ * - "approved" when the number of "approved" events >= threshold and the
+ *   deadline has not passed.
+ * - "expired" when the deadline has passed and the threshold was not met
+ *   (and no rejection was recorded).
+ * - "pending" otherwise (not enough approvals, deadline not passed).
  */
 export const ConsensusStateSchema = z.object({
   state:           ConsensusStateValueSchema,
