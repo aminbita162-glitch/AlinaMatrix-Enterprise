@@ -319,3 +319,14 @@ export type {
   ConsensusStateValue,
   ConsensusState,
 } from "./consensus.js";
+
+// R3 — pinned live model provider
+export {
+  PinnedModelConfigSchema,
+  SemanticVarianceRecordSchema,
+} from "./pinned-model.js";
+
+export type {
+  PinnedModelConfig,
+  SemanticVarianceRecord,
+} from "./pinned-model.js";

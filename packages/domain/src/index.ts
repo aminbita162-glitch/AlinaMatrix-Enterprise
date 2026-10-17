@@ -217,3 +217,9 @@ export {
   ConsensusRejectedError,
   ConsensusInputError,
 } from "./consensus.js";
+
+// R3 — pinned live model provider
+export {
+  PinnedModelProvider,
+  recordSemanticVariance,
+} from "./pinned-model.js";
