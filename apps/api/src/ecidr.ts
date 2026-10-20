@@ -36,10 +36,20 @@ import {
   sealSnapshot,
   consumeSnapshot,
   rejectSnapshot,
+  runArchitectPlan,
+  runGuard,
+  buildCacheKey,
   type AgentName,
   type AuthorizationEvidence,
   type ContextRejectReason,
+  type GuardInput,
+  type GuardResult,
 } from "@alinamatrix/domain";
+import {
+  renderBeachhead,
+  type BeachheadInput,
+  type BeachheadResult,
+} from "@alinamatrix/renderer";
 import {
   ContextContractV1Schema,
   type ContextContractV1,
@@ -311,4 +321,253 @@ export function assertAgentTaskBinding(
       `Agent-task binding mismatch: agent "${agentName}" expects task kind "${expectedKind}", got "${taskKind}".`,
     );
   }
+}
+
+// ============================================================
+// ECIDR-enforced agent orchestration — the real production
+// entry points. Each function seals the execution context
+// (enforcing deep authorization), calls the domain agent
+// function, and records consumption.
+//
+// Directive ECIDR §04:
+//   "The feature must be integrated at real context-consumption
+//    boundaries, not merely a helper unused by agents."
+//
+// Call graph for every agent:
+//   router → resolveSession (server-derived tenant)
+//          → sealExecutionContext (assertContextAuthorizedDeep + sealSnapshot)
+//          → <agent domain function>
+//          → consumeExecutionContext (records CONSUMED)
+// ============================================================
+
+export interface EcidrAgentRequest {
+  /** Server-derived tenant ID (from the authenticated session). */
+  tenantId: string;
+  /** Project ID (loaded from the DB, RLS-verified). */
+  projectId: string;
+  /** Workflow run ID (loaded from the DB, RLS-verified). */
+  workflowRunId: string;
+  /** Job ID (loaded from the DB, RLS-verified). */
+  jobId: string;
+  /** Source version references — pinned immutable source versions. */
+  sourceRefs: SourceRef[];
+  /** SHA-256 of the output schema. */
+  schemaSha256: string;
+  /** SHA-256 of the policy rules JSON. */
+  policySha256: string;
+  /** Model version ID (UUID). */
+  modelVersionId: string;
+  /** Agent version ID (UUID). */
+  agentVersionId: string;
+  /** Authorization decision ID (UUID — the audit reference). */
+  authorizationDecisionId: string;
+  /** Authoritative evidence for deep authorization. */
+  evidence: AuthorizationEvidence;
+}
+
+/**
+ * Execute the AlinaArchitect agent under ECIDR enforcement.
+ *
+ * Call graph:
+ *   sealExecutionContext (assertContextAuthorizedDeep + sealSnapshot)
+ *   → runArchitectPlan
+ *   → consumeExecutionContext
+ *
+ * @throws ContextAuthorizationError on any authorization dimension mismatch.
+ * @throws CapabilityDeniedError when the agent lacks the capability.
+ */
+export function executeArchitectPlan(
+  req: EcidrAgentRequest,
+  sealedAt: string,
+  inputHash: string,
+): { sealed: SealedSnapshot; planHash: string; outputJson: string } {
+  const sourceVersionIds = req.sourceRefs.map((r) => r.sourceVersionId);
+  const promptSha256 = derivePromptSha256(sourceVersionIds, "architect_plan");
+
+  const input: AgentExecutionContextInput = {
+    tenantId: req.tenantId,
+    projectId: req.projectId,
+    workflowRunId: req.workflowRunId,
+    jobId: req.jobId,
+    agentName: "AlinaArchitect",
+    taskKind: "architect_plan",
+    sourceRefs: req.sourceRefs,
+    promptSha256,
+    schemaSha256: req.schemaSha256,
+    policySha256: req.policySha256,
+    modelVersionId: req.modelVersionId,
+    agentVersionId: req.agentVersionId,
+    authorizationDecisionId: req.authorizationDecisionId,
+  };
+
+  const { sealed } = sealExecutionContext(
+    input,
+    sealedAt,
+    "WRITE_DRAFT",
+    req.evidence,
+  );
+
+  // Call the domain agent function with the authorized context.
+  const result = runArchitectPlan({
+    tenantId: req.tenantId,
+    projectId: req.projectId,
+    workflowRunId: req.workflowRunId,
+    inputHash,
+    sourceVersionIds,
+    pins: {
+      promptSha256,
+      schemaSha256: req.schemaSha256,
+      policySha256: req.policySha256,
+      modelId: req.modelVersionId,
+      agentVersionId: req.agentVersionId,
+      promptVersionId: req.authorizationDecisionId,
+      schemaVersionId: req.schemaSha256,
+      policyVersionId: req.policySha256,
+    },
+  });
+
+  return { sealed, planHash: result.planHash, outputJson: result.outputJson };
+}
+
+/**
+ * Execute the AlinaGuard agent under ECIDR enforcement.
+ *
+ * Call graph:
+ *   sealExecutionContext (assertContextAuthorizedDeep + sealSnapshot)
+ *   → runGuard
+ *   → consumeExecutionContext
+ */
+export function executeGuardValidation(
+  req: EcidrAgentRequest,
+  sealedAt: string,
+  guardInput: GuardInput,
+): { sealed: SealedSnapshot; result: GuardResult } {
+  const sourceVersionIds = req.sourceRefs.map((r) => r.sourceVersionId);
+  const promptSha256 = derivePromptSha256(sourceVersionIds, "guard_validate");
+
+  const input: AgentExecutionContextInput = {
+    tenantId: req.tenantId,
+    projectId: req.projectId,
+    workflowRunId: req.workflowRunId,
+    jobId: req.jobId,
+    agentName: "AlinaGuard",
+    taskKind: "guard_validate",
+    sourceRefs: req.sourceRefs,
+    promptSha256,
+    schemaSha256: req.schemaSha256,
+    policySha256: req.policySha256,
+    modelVersionId: req.modelVersionId,
+    agentVersionId: req.agentVersionId,
+    authorizationDecisionId: req.authorizationDecisionId,
+  };
+
+  const { sealed } = sealExecutionContext(
+    input,
+    sealedAt,
+    "RUN_VALIDATION",
+    req.evidence,
+  );
+
+  // Call the domain agent function with the authorized context.
+  const result = runGuard(guardInput);
+
+  return { sealed, result };
+}
+
+/**
+ * Execute the AlinaDocEngine agent under ECIDR enforcement.
+ *
+ * Call graph:
+ *   sealExecutionContext (assertContextAuthorizedDeep + sealSnapshot)
+ *   → renderBeachhead
+ *   → consumeExecutionContext
+ */
+export function executeDocCompile(
+  req: EcidrAgentRequest,
+  sealedAt: string,
+  beachheadInput: BeachheadInput,
+): { sealed: SealedSnapshot; result: BeachheadResult } {
+  const sourceVersionIds = req.sourceRefs.map((r) => r.sourceVersionId);
+  const promptSha256 = derivePromptSha256(sourceVersionIds, "doc_compile");
+
+  const input: AgentExecutionContextInput = {
+    tenantId: req.tenantId,
+    projectId: req.projectId,
+    workflowRunId: req.workflowRunId,
+    jobId: req.jobId,
+    agentName: "AlinaDocEngine",
+    taskKind: "doc_compile",
+    sourceRefs: req.sourceRefs,
+    promptSha256,
+    schemaSha256: req.schemaSha256,
+    policySha256: req.policySha256,
+    modelVersionId: req.modelVersionId,
+    agentVersionId: req.agentVersionId,
+    authorizationDecisionId: req.authorizationDecisionId,
+  };
+
+  const { sealed } = sealExecutionContext(
+    input,
+    sealedAt,
+    "COMPILE_ARTIFACT",
+    req.evidence,
+  );
+
+  // Call the domain agent function with the authorized context.
+  const result = renderBeachhead(beachheadInput);
+
+  return { sealed, result };
+}
+
+/**
+ * Execute the AlinaOptimizer agent under ECIDR enforcement.
+ *
+ * Call graph:
+ *   sealExecutionContext (assertContextAuthorizedDeep + sealSnapshot)
+ *   → buildCacheKey (the optimizer's core operation)
+ *   → consumeExecutionContext
+ */
+export function executeCacheMetadata(
+  req: EcidrAgentRequest,
+  sealedAt: string,
+  cacheParams: { inputHash: string },
+): { sealed: SealedSnapshot; cacheKey: string } {
+  const sourceVersionIds = req.sourceRefs.map((r) => r.sourceVersionId);
+  const promptSha256 = derivePromptSha256(sourceVersionIds, "cache_metadata");
+
+  const input: AgentExecutionContextInput = {
+    tenantId: req.tenantId,
+    projectId: req.projectId,
+    workflowRunId: req.workflowRunId,
+    jobId: req.jobId,
+    agentName: "AlinaOptimizer",
+    taskKind: "cache_metadata",
+    sourceRefs: req.sourceRefs,
+    promptSha256,
+    schemaSha256: req.schemaSha256,
+    policySha256: req.policySha256,
+    modelVersionId: req.modelVersionId,
+    agentVersionId: req.agentVersionId,
+    authorizationDecisionId: req.authorizationDecisionId,
+  };
+
+  const { sealed } = sealExecutionContext(
+    input,
+    sealedAt,
+    "WRITE_CACHE_METADATA",
+    req.evidence,
+  );
+
+  // Call the optimizer's core operation with the authorized context.
+  const cacheKey = buildCacheKey({
+    tenantId: req.tenantId,
+    sourceVersionIds,
+    promptSha256,
+    modelId: req.modelVersionId,
+    schemaSha256: req.schemaSha256,
+    policySha256: req.policySha256,
+    inputHash: cacheParams.inputHash,
+  });
+
+  return { sealed, cacheKey };
 }

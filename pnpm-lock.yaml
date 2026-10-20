@@ -38,6 +38,9 @@ importers:
       '@alinamatrix/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@alinamatrix/renderer':
+        specifier: workspace:*
+        version: link:../../packages/renderer
       '@node-rs/argon2':
         specifier: ^2.2.1
         version: 2.2.1

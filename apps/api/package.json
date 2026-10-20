@@ -13,6 +13,7 @@
     "@alinamatrix/contracts": "workspace:*",
     "@alinamatrix/db": "workspace:*",
     "@alinamatrix/domain": "workspace:*",
+    "@alinamatrix/renderer": "workspace:*",
     "@node-rs/argon2": "^2.2.1",
     "pdf-parse": "^2.4.5",
     "pg": "^8.23.1",

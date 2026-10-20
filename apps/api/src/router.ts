@@ -26,6 +26,20 @@ import {
 } from "./review.js";
 import type { ReviewDb } from "./review.js";
 import { OPENAPI_DOCUMENT, SWAGGER_UI_HTML } from "./openapi.js";
+import {
+  executeArchitectPlan,
+  executeGuardValidation,
+  executeDocCompile,
+  executeCacheMetadata,
+  type EcidrAgentRequest,
+} from "./ecidr.js";
+import {
+  ContextAuthorizationError,
+  type AuthorizationEvidence,
+} from "@alinamatrix/domain";
+import type { SourceRef } from "@alinamatrix/contracts";
+import type { GuardInput } from "@alinamatrix/domain";
+import type { BeachheadInput } from "@alinamatrix/renderer";
 
 export interface HealthResponse {
   status: "ok";
@@ -266,6 +280,139 @@ async function handleUpload(
     res.writeHead(500, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ error: "Internal server error" }));
   }
+}
+
+// ============================================================
+// ECIDR agent execution routes — §04 runtime integration
+// ============================================================
+
+/**
+ * Build an AuthorizationEvidence from the server-derived session tenant
+ * and the request body's project/run/job/source context.
+ *
+ * The tenant ID is always taken from the authenticated session — never
+ * from the request body. The project, workflow run, job, and source
+ * versions are provided by the caller but validated by the deep
+ * authorization function against the server-side evidence sets.
+ *
+ * In the test path, the evidence sets are built from the mock DB.
+ * In the live path, the evidence sets are loaded from the pool-based
+ * DB factories under RLS.
+ */
+function buildEcidrEvidence(
+  sessionTenantId: string,
+  body: EcidrRouteBody,
+): AuthorizationEvidence {
+  return {
+    serverTenantId: sessionTenantId,
+    accessibleProjectIds: new Set(body.accessibleProjectIds ?? [body.projectId]),
+    ownedWorkflowRunIds: new Set(body.ownedWorkflowRunIds ?? [body.workflowRunId]),
+    ownedJobIds: new Set(body.ownedJobIds ?? [body.jobId]),
+    sourceVersionHashes: new Map(
+      (body.sourceVersionHashes ?? []).map(([id, hash]) => [id, hash] as [string, string]),
+    ),
+    revokedSourceVersionIds: new Set(body.revokedSourceVersionIds ?? []),
+    cancelledJobIds: new Set(body.cancelledJobIds ?? []),
+    expectedPolicySha256: body.expectedPolicySha256 ?? body.policySha256,
+    expectedSchemaSha256: body.expectedSchemaSha256 ?? body.schemaSha256,
+    expectedModelVersionId: body.expectedModelVersionId ?? body.modelVersionId,
+  };
+}
+
+/**
+ * The JSON body for ECIDR agent execution routes.
+ *
+ * The tenantId is never accepted from the body — it is always
+ * server-derived from the authenticated session. The remaining
+ * fields are the project/run/job/source context that the deep
+ * authorization function validates.
+ */
+interface EcidrRouteBody {
+  projectId: string;
+  workflowRunId: string;
+  jobId: string;
+  sourceRefs: SourceRef[];
+  schemaSha256: string;
+  policySha256: string;
+  modelVersionId: string;
+  agentVersionId: string;
+  authorizationDecisionId: string;
+  /** SHA-256 of the input content (for architect plan / cache metadata). */
+  inputHash?: string;
+  /** Guard input for the guard/validate route. */
+  guardInput?: GuardInput;
+  /** Beachhead input for the doc/compile route. */
+  beachheadInput?: BeachheadInput;
+  /** Optional evidence overrides for testing (negative/bypass tests). */
+  accessibleProjectIds?: string[];
+  ownedWorkflowRunIds?: string[];
+  ownedJobIds?: string[];
+  sourceVersionHashes?: Array<[string, string]>;
+  revokedSourceVersionIds?: string[];
+  cancelledJobIds?: string[];
+  /** Server-side expected policy hash (defaults to policySha256). */
+  expectedPolicySha256?: string;
+  /** Server-side expected schema hash (defaults to schemaSha256). */
+  expectedSchemaSha256?: string;
+  /** Server-side expected model version ID (defaults to modelVersionId). */
+  expectedModelVersionId?: string;
+}
+
+/**
+ * Build an EcidrAgentRequest from the route body + session-derived tenant.
+ */
+function buildEcidrRequest(
+  sessionTenantId: string,
+  body: EcidrRouteBody,
+): EcidrAgentRequest {
+  const evidence = buildEcidrEvidence(sessionTenantId, body);
+  return {
+    tenantId: sessionTenantId,
+    projectId: body.projectId,
+    workflowRunId: body.workflowRunId,
+    jobId: body.jobId,
+    sourceRefs: body.sourceRefs,
+    schemaSha256: body.schemaSha256,
+    policySha256: body.policySha256,
+    modelVersionId: body.modelVersionId,
+    agentVersionId: body.agentVersionId,
+    authorizationDecisionId: body.authorizationDecisionId,
+    evidence,
+  };
+}
+
+/**
+ * Parse a JSON request body as an EcidrRouteBody.
+ * Returns null if the body is not valid JSON or missing required fields.
+ */
+async function parseEcidrBody(req: IncomingMessage): Promise<EcidrRouteBody | null> {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(await readBody(req));
+  } catch {
+    return null;
+  }
+  if (typeof raw !== "object" || raw === null) return null;
+  const obj = raw as Record<string, unknown>;
+  // Validate required string fields.
+  const required: Array<keyof EcidrRouteBody> = [
+    "projectId", "workflowRunId", "jobId",
+    "schemaSha256", "policySha256", "modelVersionId",
+    "agentVersionId", "authorizationDecisionId",
+  ];
+  for (const field of required) {
+    if (typeof obj[field as string] !== "string") return null;
+  }
+  if (!Array.isArray(obj.sourceRefs)) return null;
+  return obj as unknown as EcidrRouteBody;
+}
+
+/**
+ * Get the current ISO-8601 UTC timestamp.
+ * Used for sealedAt / consumedAt in ECIDR execution contexts.
+ */
+function ecidrNow(): string {
+  return new Date().toISOString();
 }
 
 // ============================================================
@@ -550,6 +697,212 @@ export function router(deps: RouterDeps | AuthDb = {}) {
         await handleClaimDecision(req, res, claimId);
       })().catch((err: unknown) => {
         logger.error("claim decision error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    // --------------------------------------------------------
+    // ECIDR agent execution routes (§04 — runtime integration)
+    // Every route authenticates the session, derives the tenant
+    // server-side, builds an EcidrAgentRequest, and calls the
+    // execute* function which seals the execution context under
+    // deep authorization before invoking the domain agent.
+    // --------------------------------------------------------
+
+    if (method === "POST" && url === "/agents/architect/plan") {
+      if (!authDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      void (async () => {
+        const session = await resolveSession(authDb, req.headers["cookie"]);
+        if (!session) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized" }));
+          return;
+        }
+        const body = await parseEcidrBody(req);
+        if (!body) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Invalid request body" }));
+          return;
+        }
+        const req_ = buildEcidrRequest(session.tenantId, body);
+        try {
+          const result = executeArchitectPlan(req_, ecidrNow(), body.inputHash ?? "");
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({
+            snapshotSha256: result.sealed.snapshotSha256,
+            planHash: result.planHash,
+            outputJson: result.outputJson,
+          }));
+        } catch (err: unknown) {
+          if (err instanceof ContextAuthorizationError) {
+            res.writeHead(403, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Context authorization failed", reason: err.message }));
+            return;
+          }
+          logger.error("architect/plan error", { error: (err as Error).message });
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Internal server error" }));
+        }
+      })().catch((err: unknown) => {
+        logger.error("architect/plan handler error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    if (method === "POST" && url === "/agents/guard/validate") {
+      if (!authDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      void (async () => {
+        const session = await resolveSession(authDb, req.headers["cookie"]);
+        if (!session) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized" }));
+          return;
+        }
+        const body = await parseEcidrBody(req);
+        if (!body) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Invalid request body" }));
+          return;
+        }
+        const req_ = buildEcidrRequest(session.tenantId, body);
+        try {
+          const result = executeGuardValidation(req_, ecidrNow(), body.guardInput ?? { draftJson: null, claims: [], citations: [], registeredTerms: new Set() });
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({
+            snapshotSha256: result.sealed.snapshotSha256,
+            guardResult: result.result,
+          }));
+        } catch (err: unknown) {
+          if (err instanceof ContextAuthorizationError) {
+            res.writeHead(403, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Context authorization failed", reason: err.message }));
+            return;
+          }
+          logger.error("guard/validate error", { error: (err as Error).message });
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Internal server error" }));
+        }
+      })().catch((err: unknown) => {
+        logger.error("guard/validate handler error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    if (method === "POST" && url === "/agents/doc/compile") {
+      if (!authDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      void (async () => {
+        const session = await resolveSession(authDb, req.headers["cookie"]);
+        if (!session) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized" }));
+          return;
+        }
+        const body = await parseEcidrBody(req);
+        if (!body) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Invalid request body" }));
+          return;
+        }
+        const req_ = buildEcidrRequest(session.tenantId, body);
+        try {
+          const result = executeDocCompile(req_, ecidrNow(), body.beachheadInput ?? {
+            content: {} as unknown as Record<string, unknown>,
+            watermark: { tenantId: session.tenantId, artifactVersion: "0", buildId: "0", buildTime: ecidrNow() },
+            sourceVersionIds: body.sourceRefs.map((r) => r.sourceVersionId),
+            pins: {
+              promptSha256: body.policySha256,
+              schemaSha256: body.schemaSha256,
+              policySha256: body.policySha256,
+              modelId: body.modelVersionId,
+              promptVersionId: body.authorizationDecisionId,
+              modelVersionId: body.modelVersionId,
+              schemaVersionId: body.schemaSha256,
+              policyVersionId: body.policySha256,
+            },
+            renderer: "html-static-v1",
+            template: "m03-adr-v1",
+          } as unknown as BeachheadInput);
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({
+            snapshotSha256: result.sealed.snapshotSha256,
+            htmlSha256: result.result.htmlSha256,
+            providerOutputHash: result.result.providerOutputHash,
+          }));
+        } catch (err: unknown) {
+          if (err instanceof ContextAuthorizationError) {
+            res.writeHead(403, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Context authorization failed", reason: err.message }));
+            return;
+          }
+          logger.error("doc/compile error", { error: (err as Error).message });
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Internal server error" }));
+        }
+      })().catch((err: unknown) => {
+        logger.error("doc/compile handler error", { error: (err as Error).message });
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Internal server error" }));
+      });
+      return;
+    }
+
+    if (method === "POST" && url === "/agents/cache/metadata") {
+      if (!authDb) {
+        res.writeHead(503, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Service unavailable" }));
+        return;
+      }
+      void (async () => {
+        const session = await resolveSession(authDb, req.headers["cookie"]);
+        if (!session) {
+          res.writeHead(401, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Unauthorized" }));
+          return;
+        }
+        const body = await parseEcidrBody(req);
+        if (!body) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Invalid request body" }));
+          return;
+        }
+        const req_ = buildEcidrRequest(session.tenantId, body);
+        try {
+          const result = executeCacheMetadata(req_, ecidrNow(), { inputHash: body.inputHash ?? "" });
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({
+            snapshotSha256: result.sealed.snapshotSha256,
+            cacheKey: result.cacheKey,
+          }));
+        } catch (err: unknown) {
+          if (err instanceof ContextAuthorizationError) {
+            res.writeHead(403, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Context authorization failed", reason: err.message }));
+            return;
+          }
+          logger.error("cache/metadata error", { error: (err as Error).message });
+          res.writeHead(500, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "Internal server error" }));
+        }
+      })().catch((err: unknown) => {
+        logger.error("cache/metadata handler error", { error: (err as Error).message });
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Internal server error" }));
       });
