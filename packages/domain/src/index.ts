@@ -300,10 +300,12 @@ export {
   computeContextPayloadSha256,
   computeSnapshotSha256,
   assertContextAuthorized,
+  assertContextAuthorizedDeep,
   sealSnapshot,
   consumeSnapshot,
   rejectSnapshot,
   replaySnapshot,
+  replaySnapshotWithEvidence,
   assertLegalSnapshotTransition,
   isLegalSnapshotTransition,
   ContextContractError,
@@ -314,4 +316,7 @@ export {
 } from "./context.js";
 export type {
   SealSnapshotInput,
+  AuthorizationEvidence,
+  ReplayEvidence,
 } from "./context.js";
+export type { ContextRejectReason } from "@alinamatrix/contracts";
