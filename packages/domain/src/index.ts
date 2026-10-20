@@ -292,3 +292,26 @@ export {
   PinnedModelProvider,
   recordSemanticVariance,
 } from "./pinned-model.js";
+
+// ECIDR — Context Contract V1 (evidence context integrity & deterministic replay)
+export {
+  CANONICALIZATION_VERSION,
+  canonicalizeSourceRefs,
+  computeContextPayloadSha256,
+  computeSnapshotSha256,
+  assertContextAuthorized,
+  sealSnapshot,
+  consumeSnapshot,
+  rejectSnapshot,
+  replaySnapshot,
+  assertLegalSnapshotTransition,
+  isLegalSnapshotTransition,
+  ContextContractError,
+  ContextHashMismatchError,
+  ContextAuthorizationError,
+  ContextStateError,
+  ContextReplayError,
+} from "./context.js";
+export type {
+  SealSnapshotInput,
+} from "./context.js";

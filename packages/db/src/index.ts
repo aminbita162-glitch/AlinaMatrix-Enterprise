@@ -239,3 +239,22 @@ export type {
   ConsensusDecisionEventRow,
   InsertConsensusDecisionEventParams,
 } from "./consensus.js";
+
+// ECIDR — context snapshots (evidence context integrity & deterministic replay)
+export {
+  insertContextSnapshot,
+  sealContextSnapshot,
+  consumeContextSnapshot,
+  rejectContextSnapshot,
+  getContextSnapshot,
+  getContextSnapshotByHash,
+  listContextSnapshotsByJob,
+  listContextSnapshotsByRun,
+} from "./context.js";
+export type {
+  ContextSnapshotRow,
+  InsertContextSnapshotParams,
+  SealContextSnapshotParams,
+  ConsumeContextSnapshotParams,
+  RejectContextSnapshotParams,
+} from "./context.js";

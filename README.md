@@ -378,6 +378,56 @@ Every claim in this README is audited against evidence in the repository.
 | 8 | Renderer and Build Manifest | Complete |
 | 9 | Release Gate, Export, Budget | Complete |
 | 10 | Evaluation Evidence and Honest Scorecard | Complete |
+| ECIDR | Verifiable Evidence Context Integrity & Deterministic Replay | Complete |
+
+---
+
+## ECIDR — Verifiable Evidence Context Integrity & Deterministic Replay
+
+**Purpose:** Bind every evidence context handoff to the existing four-agent document-engineering
+workflow with a strict runtime-validated, versioned context contract. Every context is
+cryptographically bound to an authenticated server-derived tenant, an authorized project, a
+workflow run, a job, a named agent, a task purpose, a policy version, and an immutable set of
+source versions. Sealed snapshots are immutable; a read-only replay verifier reconstructs the
+exact authorized context and checks recorded hashes and pins without side effects.
+
+**Context Contract V1:** `packages/contracts/src/context.ts` — `ContextContractV1Schema` with
+`contractVersion='1'`, `tenantId`, `projectId`, `workflowRunId`, `jobId`, `agentName`,
+`taskKind`, `sourceRefs[]` (sorted + deduplicated by `sourceVersionId`), `promptSha256`,
+`schemaSha256`, `policySha256`, `modelVersionId`, `agentVersionId`, `canonicalizationVersion`,
+`contextPayloadSha256`, `snapshotSha256`, `createdAt` (audit metadata), and
+`authorizationDecisionId`.
+
+**Canonicalization:** Domain-separated SHA-256 over UTF-8 canonical JSON with sorted keys, sorted
+source refs, explicit `canonicalizationVersion`, and `createdAt` excluded from the content digest.
+`computeContextPayloadSha256` hashes the deterministic fields; `computeSnapshotSha256` hashes the
+payload hash + all deterministic fields. Cross-process golden vectors verify reproducibility.
+
+**Snapshot lifecycle:** PREPARED → SEALED → CONSUMED (or REJECTED). `sealSnapshot` verifies
+payload + snapshot hashes and agent authorization in one consistent view. `consumeSnapshot`
+records which agent/job consumed which sealed snapshot. `rejectSnapshot` records a safe reason code.
+Immutable: `packages/db/migrations/015_context_snapshots.sql` — RLS with `FORCE`, `app_user`
+SELECT+INSERT+UPDATE, triggers reject content-field mutations on SEALED/CONSUMED/REJECTED rows.
+Idempotent creation by `UNIQUE (tenant_id, job_id, snapshot_sha256)`.
+
+**Replay verification:** `replaySnapshot` — read-only, no side effects. Reconstructs the
+authorized context, checks the Zod schema, payload hash, and snapshot hash. Rejects tampered
+tenant, source content, fragment refs, policy, and hash mismatches with typed
+`ContextReplayError`.
+
+**Evidence:** `packages/domain/src/context.test.ts` (61 tests: schema, canonical ordering,
+deterministic hashes, mutation testing, authorization, lifecycle, state transitions, replay,
+cross-tenant isolation). `packages/db/src/context.test.ts` (14 unit tests). `packages/db/src/context.integration.test.ts` (8 live PostgreSQL tests: tenant isolation, seal/consume/reject,
+idempotent insert, SEALED/CONSUMED immutability under triggers).
+
+**Test counts:** 605 domain passed (2 skipped — live model), 446 DB passed (including 8 context
+integration + 101 existing integration), 86 renderer, 90 API. Total 1227 passed with live
+PostgreSQL; 1118 passed without DB env (109 DB integration skipped).
+
+**Known limitations:** The context contract is not yet wired into the live API router's agent call
+sites — the integration is at the domain and DB layer. Live LLM calls are not made
+(DeterministicFakeProvider only). Security coverage for ECIDR is unit + integration test level
+(mock + live PostgreSQL), not live penetration testing. No regional disaster recovery.
 
 ---
 

@@ -361,6 +361,29 @@ export type {
   LiveModelOutput,
 } from "./live-model.js";
 
+// ECIDR — Context Contract V1 (evidence context integrity & deterministic replay)
+export {
+  SourceRefSchema,
+  ContextSnapshotStateSchema,
+  ContextRejectReasonSchema,
+  ContextContractV1Schema,
+  SealedSnapshotSchema,
+  ConsumedSnapshotSchema,
+  RejectedSnapshotSchema,
+  ContextSnapshotSchema,
+} from "./context.js";
+
+export type {
+  SourceRef,
+  ContextSnapshotState,
+  ContextRejectReason,
+  ContextContractV1,
+  SealedSnapshot,
+  ConsumedSnapshot,
+  RejectedSnapshot,
+  ContextSnapshot,
+} from "./context.js";
+
 // R3 — pinned live model provider
 export {
   PinnedModelConfigSchema,
